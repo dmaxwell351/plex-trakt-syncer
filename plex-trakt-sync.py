@@ -124,10 +124,10 @@ class Syncer(object):
 		        '-v', '--verbose', dest='verbose', action='store_true',
 		        help='Print more verbose debugging informations.')
 
-			parser.add_option(
-			        '-a', '--all', dest='all', action='store_true',
-			        default=False,
-			        help='Sync all items to Trakt, not only just watched.')
+		parser.add_option(
+		        '-a', '--all', dest='all', action='store_true',
+		        default=False,
+		        help='Sync all items to Trakt, not only just watched.')
 
 		self.options, self.arguments = parser.parse_args(args)
 
