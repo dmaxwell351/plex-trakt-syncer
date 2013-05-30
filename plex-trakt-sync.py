@@ -123,6 +123,11 @@ class Syncer(object):
         parser.add_option(
             '-v', '--verbose', dest='verbose', action='store_true',
             help='Print more verbose debugging informations.')
+                        		
+		parser.add_option(
+            '-a', '--all', dest='all', action='store_true',
+            default=False,
+            help='Sync all items to Trakt, not only just watched.')
 
         self.options, self.arguments = parser.parse_args(args)
 
@@ -149,29 +154,52 @@ class Syncer(object):
         movie_nodes = tuple(self.plex_get_watched_movies())
 
         if movie_nodes:
-            self.trakt_report_movies(movie_nodes)
+            self.trakt_report_movies(movie_nodes, True)
             if self.options.rate:
                 self.trakt_rate_movies(movie_nodes)
-
-        else:
+		else:
             LOG.warning('No watched movies could be found in your '
                         'plex server.')
+						
+		if self.options.all:
+			movie_nodes = tuple(self.plex_get_unwatched_movies())
 
+			if movie_nodes:
+				self.trakt_report_movies(movie_nodes, False)
+				if self.options.rate:
+					self.trakt_rate_movies(movie_nodes)
+			else:
+				LOG.warning('No movies could be found in your '
+							'plex server.')
+        
     def sync_shows(self):
         episode_data = self.plex_get_watched_episodes()
 
         if episode_data:
-            self.trakt_report_episodes(episode_data)
-
+            self.trakt_report_episodes(episode_data, True)
         else:
             LOG.warning('No watched show episodes could be found on your '
                         'plex server.')
+						
+		if self.options.all:
+			episode_data = self.plex_get_unwatched_episodes()
+
+			if episode_data:
+				self.trakt_report_episodes(episode_data, False)
+			else:
+				LOG.warning('No watched show episodes could be found on your '
+							'plex server.')
 
     def plex_get_watched_movies(self):
         for section_path in self._get_plex_section_paths('movie'):
             for node in self._plex_request(section_path + 'all'):
                 if node.getAttribute('viewCount'):
                     yield node
+
+	def plex_get_unwatched_movies(self):
+        for section_path in self._get_plex_section_paths('movie'):
+            for node in self._plex_request(section_path + 'unwatched'):
+				yield node
 
     def plex_get_shows(self, section_path):
         return self._plex_request('%sall' % section_path,
@@ -207,6 +235,24 @@ class Syncer(object):
 
         return shows
 
+    def plex_get_unwatched_episodes(self):
+        shows = []
+
+        for show, seasons in self.plex_get_seasons():
+            episodes = []
+
+            for season in seasons:
+                season_key = season.getAttribute('key')
+
+                for episode in self._plex_request(season_key):
+                    if not (episode.getAttribute('viewCount')):
+                       episodes.append((season, episode))
+
+            if len(episodes) > 0:
+                shows.append((show, episodes))
+
+        return shows
+
     def get_movie_data(self, node):
         """Returns movie data from a XML node, prepared to post to trakt.
         """
@@ -233,19 +279,28 @@ class Syncer(object):
 
         return None
 
-    def trakt_report_movies(self, nodes):
+    def trakt_report_movies(self, nodes, asWatched):
         movies = []
 
         for node in nodes:
             movie = self.get_movie_data(node)
-            LOG.debug('Mark "%s (%s)" as seen' % (
-                    movie['title'], movie['year']))
-            movies.append(movie)
+            
+			if asWatched:
+				LOG.debug('Mark "%s (%s)" as seen' % (
+						movie['title'], movie['year']))
+			else:
+				LOG.debug('Add "%s (%s)" to library' % (
+						movie['title'], movie['year']))
+			movies.append(movie)
 
-        LOG.info('Mark %s movies as seen in trakt.tv' % len(movies))
-        self._trakt_post('movie/seen', {'movies': movies})
+		if asWatched:
+			LOG.info('Mark %s movies as seen in trakt.tv' % len(movies))
+			self._trakt_post('movie/seen', {'movies': movies})
+		else:
+			LOG.info('Add %s movies to trakt.tv' % len(movies))
+			self._trakt_post('movie/library', {'movies': movies})
 
-    def trakt_report_episodes(self, episode_data):
+    def trakt_report_episodes(self, episode_data, asWatched):
         for show, episodes in episode_data:
             show_data = self.get_show_data(show)
             data = show_data.copy()
@@ -255,8 +310,16 @@ class Syncer(object):
                 data['episodes'].append({
                         'season': season.getAttribute('index'),
                         'episode': episode.getAttribute('index')})
-                LOG.debug(('Mark episode "%s", season %s, episode'
-                           ' %s (%s) as seen') % (
+                if asWatched:
+					LOG.debug(('Mark episode "%s", season %s, episode'
+							' %s (%s) as seen') % (
+						data['title'],
+						season.getAttribute('index'),
+						episode.getAttribute('index'),
+						episode.getAttribute('title')))
+				else:
+					LOG.debug(('Add episode "%s", season %s, episode'
+							' %s (%s) to library') % (
                         data['title'],
                         season.getAttribute('index'),
                         episode.getAttribute('index'),
@@ -280,10 +343,16 @@ class Syncer(object):
                                 rating))
                         self._trakt_post('rate/episode', episode_data)
 
-            LOG.info(('Mark "%s" episodes of the show %s as '
-                      'seen in trakt.tv') % (
-                    len(data['episodes']), data['title']))
-            self._trakt_post('show/episode/seen', data)
+            if asWatched:
+				LOG.info(('Mark "%s" episodes of the show %s as '
+						'seen in trakt.tv') % (
+						len(data['episodes']), data['title']))
+				self._trakt_post('show/episode/seen', data)
+			else:
+				LOG.info(('Add "%s" episodes of the show %s to '
+						'library in trakt.tv') % (
+						len(data['episodes']), data['title']))
+				self._trakt_post('show/episode/library', data)
 
     def trakt_rate_movies(self, nodes):
         rated = 0
