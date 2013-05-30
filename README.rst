@@ -9,24 +9,22 @@ Features
 
 - Marks **movies** and **show episodes** watched in Plex_ when watched in your Trakt_ profile.
 - Optionally flages the movies and show episodes in Trakt_ with "love" or "hate" according to the rating in Plex_.
-
+- Optionally adds unwatched movies and show episodes to your trakt library.
 
 Scrobbling
 ==========
 
 At the current state this script does not scrobble. Feel free to modify the script and start a pull-request.
 
-
-
 Install
 =======
 
-Either download the script from https://github.com/jone/plex-trakt-syncer/downloads or
+Either download the script from https://github.com/dmaxwell351/plex-trakt-syncer/downloads or
 clone the repository with git:
 
 ::
 
-    $ git clone https://github.com/jone/plex-trakt-syncer.git
+    $ git clone https://github.com/dmaxwell351/plex-trakt-syncer.git
     $ cd plex-trakt-syncer
     $ plex-trakt-sync.py --help
 
@@ -60,6 +58,7 @@ Usage
       -k API-KEY, --key=API-KEY
                             trakt.tv API key
       -r, --rate            Submit plex movie ratings to trakt.
+      -a, --all             Adds unwatched movies and show episodes to trakt library.
       --max-hate=1-10       Maxmimum plex rating for flagging a movie with "hate"
                             (In combination with -r option, defaults to 3).
       --min-love=1-10       Minimum plex rating for flagging a movie with "love"
@@ -76,19 +75,18 @@ Usage
 License
 =======
 
-"THE BEER-WARE LICENSE" (Revision 42):
+jone wrote the original plex-trakt-syncer script, which can be found at https://github.com/jone/plex-trakt-syncer.
 
-jone_ wrote this script. As long as you retain this notice you
-can do whatever you want with this stuff. If we meet some day, and you think
-this stuff is worth it, you can buy me a beer in return.
+This version may be used for any purpose.
 
 Source
 ======
 
-The source is located at https://github.com/jone/plex-trakt-syncer
+The source is located at https://github.com/dmaxwell351/plex-trakt-syncer
 
 
 .. _Trakt: http://trakt.tv/
 .. _Plex: http://www.plexapp.com/
 .. _jone: http://github.com/jone
+.. _dmaxwell351: http://github.com/dmaxwell351
 .. _cronjob: http://de.wikipedia.org/wiki/Cron
