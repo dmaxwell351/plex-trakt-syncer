@@ -124,7 +124,7 @@ class Syncer(object):
             '-v', '--verbose', dest='verbose', action='store_true',
             help='Print more verbose debugging informations.')
                         		
-		parser.add_option(
+	parser.add_option(
             '-a', '--all', dest='all', action='store_true',
             default=False,
             help='Sync all items to Trakt, not only just watched.')
