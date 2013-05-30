@@ -286,18 +286,18 @@ class Syncer(object):
 			movie = self.get_movie_data(node)
 
 			if asWatched:
-				LOG.debug('Mark "%s (%s)" as seen' % (
+				LOG.info('Mark "%s (%s)" as seen' % (
 				        movie['title'], movie['year']))
 			else:
-				LOG.debug('Add "%s (%s)" to library' % (
+				LOG.info('Add "%s (%s)" to library' % (
 				        movie['title'], movie['year']))
 			movies.append(movie)
 
 			if asWatched:
-				LOG.info('Mark %s movies as seen in trakt.tv' % len(movies))
+				LOG.debug('Mark %s movies as seen in trakt.tv' % len(movies))
 				self._trakt_post('movie/seen', {'movies': movies})
 			else:
-				LOG.info('Add %s movies to trakt.tv' % len(movies))
+				LOG.debug('Add %s movies to trakt.tv' % len(movies))
 				self._trakt_post('movie/library', {'movies': movies})
 
 	def trakt_report_episodes(self, episode_data, asWatched):
@@ -311,14 +311,14 @@ class Syncer(object):
 				        'season': season.getAttribute('index'),
 				        'episode': episode.getAttribute('index')})
 				if asWatched:
-					LOG.debug(('Mark episode "%s", season %s, episode'
+					LOG.info(('Mark episode "%s", season %s, episode'
 					           ' %s (%s) as seen') % (
 					                   data['title'],
 					                   season.getAttribute('index'),
 					                   episode.getAttribute('index'),
 					                   episode.getAttribute('title')))
 				else:
-					LOG.debug(('Add episode "%s", season %s, episode'
+					LOG.info(('Add episode "%s", season %s, episode'
 					           ' %s (%s) to library') % (
 					                   data['title'],
 					                   season.getAttribute('index'),
@@ -344,12 +344,12 @@ class Syncer(object):
 						self._trakt_post('rate/episode', episode_data)
 
 			if asWatched:
-				LOG.info(('Mark "%s" episodes of the show %s as '
+				LOG.debug(('Mark "%s" episodes of the show %s as '
 				          'seen in trakt.tv') % (
 				                  len(data['episodes']), data['title']))
 				self._trakt_post('show/episode/seen', data)
 			else:
-				LOG.info(('Add "%s" episodes of the show %s to '
+				LOG.debug(('Add "%s" episodes of the show %s to '
 				          'library in trakt.tv') % (
 				                  len(data['episodes']), data['title']))
 				self._trakt_post('show/episode/library', data)
