@@ -20,7 +20,7 @@ flags the movies at the trakt profile with "love" or "hate" according to
 ratings in Plex.'''
 
 EPILOG = '''
-** Rating **           The plex rating allows to give up to 5 stars for
+** Rating **		   The plex rating allows to give up to 5 stars for
 a movie, but you can also give half stars, so there are 10 steps for the
 rating. The configurable --min-hate and --max-love options take a value
 between 1 and 10. Movies which are not yet rated in plex are not flagged
@@ -28,12 +28,12 @@ at all.
 '''
 
 LOG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                        'syncer.log')
+						'syncer.log')
 
 logging.basicConfig(
-        filename=LOG_FILE,
-        datefmt='%Y-%m-%dT%H:%M:%S',
-        format='%(asctime)s %(levelname)s [%(name)s] %(message)s')
+		filename=LOG_FILE,
+		datefmt='%Y-%m-%dT%H:%M:%S',
+		format='%(asctime)s %(levelname)s [%(name)s] %(message)s')
 
 
 LOG = logging.getLogger('plex-trakt-syncer')
@@ -67,67 +67,67 @@ class Syncer(object):
 		"""
 
 		parser = OptionParser(version=VERSION, description=DESCRIPTION,
-		                      epilog=EPILOG)
+							  epilog=EPILOG)
 
 		parser.add_option(
-		        '-H', '--host', dest='plex_host', default='localhost',
-		        metavar='HOST',
-		        help='Hostname or IP of plex server (default: localhost)')
+				'-H', '--host', dest='plex_host', default='localhost',
+				metavar='HOST',
+				help='Hostname or IP of plex server (default: localhost)')
 
 		parser.add_option(
-		        '-P', '--port', dest='plex_port', default=32400,
-		        metavar='PORT',
-		        help='Port of the plex server (default: 32400)')
+				'-P', '--port', dest='plex_port', default=32400,
+				metavar='PORT',
+				help='Port of the plex server (default: 32400)')
 
 		parser.add_option(
-		        '-u', '--username', dest='trakt_username',
-		        metavar='USERNAME',
-		        help='trakt.tv username')
+				'-u', '--username', dest='trakt_username',
+				metavar='USERNAME',
+				help='trakt.tv username')
 
 		parser.add_option(
-		        '-p', '--password', dest='trakt_password',
-		        metavar='PASSWORD',
-		        help='trakt.tv password')
+				'-p', '--password', dest='trakt_password',
+				metavar='PASSWORD',
+				help='trakt.tv password')
 
 		parser.add_option(
-		        '--no-movies', dest='sync_movies', action='store_false',
-		        default=True,
-		        help='Do not sync watched movies.')
+				'--no-movies', dest='sync_movies', action='store_false',
+				default=True,
+				help='Do not sync watched movies.')
 
 		parser.add_option(
-		        '--no-shows', dest='sync_shows', action='store_false',
-		        default=True,
-		        help='Do not sync watched shows.')
+				'--no-shows', dest='sync_shows', action='store_false',
+				default=True,
+				help='Do not sync watched shows.')
 
 		parser.add_option(
-		        '-k', '--key', dest='trakt_key',
-		        metavar='API-KEY',
-		        help='trakt.tv API key')
+				'-k', '--key', dest='trakt_key',
+				metavar='API-KEY',
+				help='trakt.tv API key')
 
 		parser.add_option(
-		        '-r', '--rate', dest='rate', action='store_true',
-		        help='Submit plex movie ratings to trakt.')
+				'-r', '--rate', dest='rate', action='store_true',
+				help='Submit plex movie ratings to trakt.')
 
 		parser.add_option(
-		        '--max-hate', dest='max_hate', type='int', metavar='1-10',
-		        default=3,
-		        help='Maxmimum plex rating for flagging a movie with "hate" '
-		        '(In combination with -r option, defaults to 3).')
+				'--max-hate', dest='max_hate', type='int', metavar='1-10',
+				default=3,
+				help='Maxmimum plex rating for flagging a movie with "hate" '
+				'(In combination with -r option, defaults to 3).')
 
 		parser.add_option(
-		        '--min-love', dest='min_love', type='int', metavar='1-10',
-		        default=8,
-		        help='Minimum plex rating for flagging a movie with "love" '
-		        '(In combination with -r option, defaults to 8).')
+				'--min-love', dest='min_love', type='int', metavar='1-10',
+				default=8,
+				help='Minimum plex rating for flagging a movie with "love" '
+				'(In combination with -r option, defaults to 8).')
 
 		parser.add_option(
-		        '-v', '--verbose', dest='verbose', action='store_true',
-		        help='Print more verbose debugging informations.')
+				'-v', '--verbose', dest='verbose', action='store_true',
+				help='Print more verbose debugging informations.')
 
 		parser.add_option(
-		        '-a', '--all', dest='all', action='store_true',
-		        default=False,
-		        help='Sync all items to Trakt, not only just watched.')
+				'-a', '--all', dest='all', action='store_true',
+				default=False,
+				help='Sync all items to Trakt, not only just watched.')
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -159,7 +159,7 @@ class Syncer(object):
 				self.trakt_rate_movies(movie_nodes)
 			else:
 				LOG.warning('No watched movies could be found in your '
-				            'plex server.')
+							'plex server.')
 
 		if self.options.all:
 			movie_nodes = tuple(self.plex_get_unwatched_movies())
@@ -170,7 +170,7 @@ class Syncer(object):
 					self.trakt_rate_movies(movie_nodes)
 			else:
 				LOG.warning('No movies could be found in your '
-				            'plex server.')
+							'plex server.')
 
 	def sync_shows(self):
 		episode_data = self.plex_get_watched_episodes()
@@ -179,7 +179,7 @@ class Syncer(object):
 			self.trakt_report_episodes(episode_data, True)
 		else:
 			LOG.warning('No watched show episodes could be found on your '
-			            'plex server.')
+						'plex server.')
 
 		if self.options.all:
 			episode_data = self.plex_get_unwatched_episodes()
@@ -188,7 +188,7 @@ class Syncer(object):
 				self.trakt_report_episodes(episode_data, False)
 			else:
 				LOG.warning('No watched show episodes could be found on your '
-				            'plex server.')
+							'plex server.')
 
 	def plex_get_watched_movies(self):
 		for section_path in self._get_plex_section_paths('movie'):
@@ -203,7 +203,7 @@ class Syncer(object):
 
 	def plex_get_shows(self, section_path):
 		return self._plex_request('%sall' % section_path,
-		                          nodename='Directory')
+								  nodename='Directory')
 
 	def plex_get_seasons(self):
 		for section_path in self._get_plex_section_paths('show'):
@@ -212,7 +212,7 @@ class Syncer(object):
 				show_key = show.getAttribute('key')
 
 				for season in self._plex_request(show_key,
-				                                 nodename='Directory'):
+												 nodename='Directory'):
 					seasons.append(season)
 
 				yield show, seasons
@@ -257,13 +257,13 @@ class Syncer(object):
 		"""Returns movie data from a XML node, prepared to post to trakt.
 		"""
 		return {'title': node.getAttribute('title'),
-		        'year': node.getAttribute('year'),
-		        'plays': node.getAttribute('viewCount'),
-		        'last_played': node.getAttribute('updatedAt')}
+				'year': node.getAttribute('year'),
+				'plays': node.getAttribute('viewCount'),
+				'last_played': node.getAttribute('updatedAt')}
 
 	def get_show_data(self, show):
 		return {'title': show.getAttribute('title'),
-		        'year': show.getAttribute('year')}
+				'year': show.getAttribute('year')}
 
 	def get_movie_rating(self, node):
 		rating = node.getAttribute('userRating')
@@ -287,24 +287,24 @@ class Syncer(object):
 
 			if asWatched:
 				LOG.info('Mark "%s (%s)" as seen' % (
-				        movie['title'], movie['year']))
+						movie['title'], movie['year']))
 			else:
 				LOG.info('Add "%s (%s)" to library' % (
-				        movie['title'], movie['year']))
+						movie['title'], movie['year']))
 			movies.append(movie)
 
 			if asWatched:
 				LOG.debug('Mark %s movies as seen in trakt.tv' % len(movies))
 				try:
-                    self._trakt_post('movie/seen', {'movies': movies})
-                except:
-                    Log.info('Error submitting to trakt')
+					self._trakt_post('movie/seen', {'movies': movies})
+				except:
+					Log.info('Error submitting to trakt')
 			else:
 				LOG.debug('Add %s movies to trakt.tv' % len(movies))
 				try:
-                    self._trakt_post('movie/library', {'movies': movies})
-                except:
-                    Log.info('Error submitting to trakt')
+					self._trakt_post('movie/library', {'movies': movies})
+				except:
+					Log.info('Error submitting to trakt')
 
 	def trakt_report_episodes(self, episode_data, asWatched):
 		for show, episodes in episode_data:
@@ -314,50 +314,50 @@ class Syncer(object):
 
 			for season, episode in episodes:
 				data['episodes'].append({
-				        'season': season.getAttribute('index'),
-				        'episode': episode.getAttribute('index')})
+						'season': season.getAttribute('index'),
+						'episode': episode.getAttribute('index')})
 				if asWatched:
 					LOG.info(('Mark episode "%s", season %s, episode'
-					           ' %s (%s) as seen') % (
-					                   data['title'],
-					                   season.getAttribute('index'),
-					                   episode.getAttribute('index'),
-					                   episode.getAttribute('title')))
+							   ' %s (%s) as seen') % (
+									   data['title'],
+									   season.getAttribute('index'),
+									   episode.getAttribute('index'),
+									   episode.getAttribute('title')))
 				else:
 					LOG.info(('Add episode "%s", season %s, episode'
-					           ' %s (%s) to library') % (
-					                   data['title'],
-					                   season.getAttribute('index'),
-					                   episode.getAttribute('index'),
-					                   episode.getAttribute('title')))
+							   ' %s (%s) to library') % (
+									   data['title'],
+									   season.getAttribute('index'),
+									   episode.getAttribute('index'),
+									   episode.getAttribute('title')))
 
 				if self.options.rate:
 					rating = self.get_movie_rating(episode)
 					if rating:
 						episode_data = show_data.copy()
 						episode_data.update({
-						        'season': season.getAttribute('index'),
-						        'episode': episode.getAttribute('index'),
-						        'rating': rating})
+								'season': season.getAttribute('index'),
+								'episode': episode.getAttribute('index'),
+								'rating': rating})
 
 						LOG.info(('Rate episode "%s", season %s, episode'
-						          ' %s (%s) with "%s"') % (
-						                  data['title'],
-						                  season.getAttribute('index'),
-						                  episode.getAttribute('index'),
-						                  episode.getAttribute('title'),
-						                  rating))
+								  ' %s (%s) with "%s"') % (
+										  data['title'],
+										  season.getAttribute('index'),
+										  episode.getAttribute('index'),
+										  episode.getAttribute('title'),
+										  rating))
 						self._trakt_post('rate/episode', episode_data)
 
 			if asWatched:
 				LOG.debug(('Mark "%s" episodes of the show %s as '
-				          'seen in trakt.tv') % (
-				                  len(data['episodes']), data['title']))
+						  'seen in trakt.tv') % (
+								  len(data['episodes']), data['title']))
 				self._trakt_post('show/episode/seen', data)
 			else:
 				LOG.debug(('Add "%s" episodes of the show %s to '
-				          'library in trakt.tv') % (
-				                  len(data['episodes']), data['title']))
+						  'library in trakt.tv') % (
+								  len(data['episodes']), data['title']))
 				self._trakt_post('show/episode/library', data)
 
 	def trakt_rate_movies(self, nodes):
@@ -374,13 +374,13 @@ class Syncer(object):
 
 			movie.update({'rating': rating})
 			LOG.info('Rate "%s (%s)" with "%s"' % (
-			        movie['title'], movie['year'], rating))
+					movie['title'], movie['year'], rating))
 			self._trakt_post('rate/movie', movie)
 
 			rated += 1
 
 		LOG.info('Rated %s of %s movies in trakt.tv' % (
-		        rated, total))
+				rated, total))
 
 	def _get_plex_section_paths(self, type_):
 		"""Returns all paths to sections of a particular type.
@@ -391,11 +391,11 @@ class Syncer(object):
 		paths = []
 
 		for node in self._plex_request(sections_path,
-		                               nodename='Directory'):
+									   nodename='Directory'):
 			if node.getAttribute('type') == type_:
 				paths.append('%s/%s/' % (
-				        sections_path,
-				        node.getAttribute('key')))
+						sections_path,
+						node.getAttribute('key')))
 
 		return paths
 
@@ -403,9 +403,9 @@ class Syncer(object):
 		"""Makes a request to plex and parses the XML with minidom.
 		"""
 		url = 'http://%s:%s%s' % (
-		        self.options.plex_host,
-		        self.options.plex_port,
-		        path)
+				self.options.plex_host,
+				self.options.plex_port,
+				path)
 
 		LOG.info('Plex request to %s' % url)
 
@@ -425,7 +425,7 @@ class Syncer(object):
 		passwd = hashlib.sha1(self.options.trakt_password).hexdigest()
 
 		postdata = {'username': self.options.trakt_username,
-		            'password': passwd}
+					'password': passwd}
 		postdata.update(data)
 
 		LOG.debug('POST to %s ...' % url)
@@ -448,7 +448,7 @@ class Syncer(object):
 
 			else:
 				filtered_data = dict([(key, value) for (key, value) in resp_json.items()
-				                      if not key.endswith('_movies')])
+									  if not key.endswith('_movies')])
 				LOG.info('Trakt request success: %s' % pformat(filtered_data))
 
 			return True
