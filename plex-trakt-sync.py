@@ -298,13 +298,13 @@ class Syncer(object):
 				try:
 					self._trakt_post('movie/seen', {'movies': movies})
 				except:
-					Log.info('Error submitting to trakt')
+					LOG.info('Error submitting to trakt')
 			else:
 				LOG.debug('Add %s movies to trakt.tv' % len(movies))
 				try:
 					self._trakt_post('movie/library', {'movies': movies})
 				except:
-					Log.info('Error submitting to trakt')
+					LOG.info('Error submitting to trakt')
 
 	def trakt_report_episodes(self, episode_data, asWatched):
 		for show, episodes in episode_data:
