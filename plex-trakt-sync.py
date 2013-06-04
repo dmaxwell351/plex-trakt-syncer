@@ -223,7 +223,7 @@ class Syncer(object):
 		except:
 			LOG.info('Error submitting unseen movies to trakt')
 
-	def trakt_report_episodes(self, episode_data, asWatched):
+	def trakt_report_episodes(self, episode_data):
 		for show, episodes in episode_data:
 			show_data = self.get_show_data(show)
 			
@@ -293,13 +293,13 @@ class Syncer(object):
 				self.options.plex_port,
 				path)
 
-		LOG.info('Plex request to %s' % url)
+		LOG.debug('Plex request to %s' % url)
 
 		response = urllib.urlopen(url)
 		data = response.read()
 		doc = parseString(data)
 
-		LOG.info('Plex request success')
+		LOG.debug('Plex request success')
 
 		return doc.getElementsByTagName(nodename)
 
