@@ -36,9 +36,12 @@ class Syncer(object):
 			args = sys.argv[1:]
 
 		self.parse_arguments(args)
-		self.sync_movies()
-		"""self.sync_shows()
-		"""
+
+		if not self.options.episodesonly:
+			self.sync_movies()
+		
+		if not self.options.moviesonly:
+			self.sync_shows()
 
 	def quit_with_error(self, message):
 		LOG.error(message)
@@ -78,6 +81,18 @@ class Syncer(object):
 		parser.add_option(
 				'-v', '--verbose', dest='verbose', action='store_true',
 				help='Print more verbose debugging informations.')
+		
+		parser.add_option(
+		                '-d', '--debug', dest='debug', action='store_true',
+		                help='Prints the JSON instead of actually submitting to trakt.')
+		
+		parser.add_option(
+		                '-m', '--movies-only', dest='moviesonly', action='store_true',
+		                help='Only sync the movie sections of Plex.')
+		
+		parser.add_option(
+		                '-e', '--episodes-only', dest='episodesonly', action='store_true',
+		                help='Only sync the TV sections of Plex.')
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -109,26 +124,16 @@ class Syncer(object):
 					yield node
 
 	def sync_shows(self):
-		episode_data = self.plex_get_watched_episodes()
+		episode_data = self.plex_get_all_episodes()
 
 		if episode_data:
-			self.trakt_report_episodes(episode_data, True)
+			self.trakt_report_episodes(episode_data)
 		else:
-			LOG.warning('No watched show episodes could be found on your '
+			LOG.warning('No episodes could be found on your '
 						'plex server.')
 
-		if self.options.all:
-			episode_data = self.plex_get_unwatched_episodes()
-
-			if episode_data:
-				self.trakt_report_episodes(episode_data, False)
-			else:
-				LOG.warning('No watched show episodes could be found on your '
-							'plex server.')
-
 	def plex_get_shows(self, section_path):
-		return self._plex_request('%sall' % section_path,
-								  nodename='Directory')
+		return self._plex_request('%sall' % section_path, nodename='Directory')
 
 	def plex_get_seasons(self):
 		for section_path in self._get_plex_section_paths('show'):
@@ -136,13 +141,12 @@ class Syncer(object):
 				seasons = []
 				show_key = show.getAttribute('key')
 
-				for season in self._plex_request(show_key,
-												 nodename='Directory'):
+				for season in self._plex_request(show_key, nodename='Directory'):
 					seasons.append(season)
-
+					
 				yield show, seasons
 
-	def plex_get_watched_episodes(self):
+	def plex_get_all_episodes(self):
 		shows = []
 
 		for show, seasons in self.plex_get_seasons():
@@ -152,26 +156,7 @@ class Syncer(object):
 				season_key = season.getAttribute('key')
 
 				for episode in self._plex_request(season_key):
-					if episode.getAttribute('viewCount'):
-						episodes.append((season, episode))
-
-			if len(episodes) > 0:
-				shows.append((show, episodes))
-
-		return shows
-
-	def plex_get_unwatched_episodes(self):
-		shows = []
-
-		for show, seasons in self.plex_get_seasons():
-			episodes = []
-
-			for season in seasons:
-				season_key = season.getAttribute('key')
-
-				for episode in self._plex_request(season_key):
-					if not (episode.getAttribute('viewCount')):
-						episodes.append((season, episode))
+					episodes.append((season, episode))
 
 			if len(episodes) > 0:
 				shows.append((show, episodes))
@@ -195,88 +180,93 @@ class Syncer(object):
 		seen = []
 		unseen = []
 
+		LOG.info('Building submission to trakt:')
+
 		for node in nodes:
 			movie = self.get_movie_data(node)
 
 			if node.getAttribute('viewCount'):
-				LOG.info('Mark "%s (%s)" as seen' % (
+				LOG.info('     "%s (%s)" as seen' % (
 						movie['title'], movie['year']))
 				seen.append(movie)
 			else:
-				LOG.info('Add "%s (%s)" to library' % (
+				LOG.info('     "%s (%s)" as unseen' % (
 						movie['title'], movie['year']))
 				unseen.append(movie)
 			
 			movies.append(movie)
 		
-		try:		
-			self._trakt_post('movie/library', {'movies': movies})
+		LOG.info('Adding all movies to the trakt library...')
+		try:
+			if debug:
+				LOG.info(pformat({'movies': movies}))
+			else:
+				self._trakt_post('movie/library', {'movies': movies})
 		except:
 			LOG.info('Error submitting all movies to trakt library')
 		
+		LOG.info('Marking watched movies as seen...')
 		try:
-			self._trakt_post('movie/seen', {'movies': seen})
+			if debug:
+				LOG.info(pformat({'movies': seen}))
+			else:			
+				self._trakt_post('movie/seen', {'movies': seen})
 		except:
 			LOG.info('Error submitting seen movies to trakt')
-			
+		
+		LOG.info('Marking unwatched movies as unseen...')	
 		try:
-			self._trakt_post('movie/unseen', {'movies': unseen})
+			if debug:
+				LOG.info(pformat({'movies': unseen}))
+			else:			
+				self._trakt_post('movie/unseen', {'movies': unseen})
 		except:
 			LOG.info('Error submitting unseen movies to trakt')
 
 	def trakt_report_episodes(self, episode_data, asWatched):
 		for show, episodes in episode_data:
 			show_data = self.get_show_data(show)
-			data = show_data.copy()
-			data['episodes'] = []
-
+			
+			allepisodes = show_data.copy()
+			allepisodes['episodes'] = []
+			
+			unseenepisodes = show_data.copy()
+			unseenepisodes['episodes'] = []
+			
+			seenepisodes = show_data.copy()
+			seenepisodes['episodes'] = []
+			
 			for season, episode in episodes:
-				data['episodes'].append({
-						'season': season.getAttribute('index'),
-						'episode': episode.getAttribute('index')})
-				if asWatched:
-					LOG.info(('Mark episode "%s", season %s, episode'
-							   ' %s (%s) as seen') % (
-									   data['title'],
-									   season.getAttribute('index'),
-									   episode.getAttribute('index'),
-									   episode.getAttribute('title')))
+				allepisodes['episodes'].append({'season': season.getAttribute('index'), 'episode': episode.getAttribute('index')})
+				
+				if episode.getAttribute('viewCount'):
+					seenepisodes['episodes'].append({'season': season.getAttribute('index'), 'episode': episode.getAttribute('index')})
 				else:
-					LOG.info(('Add episode "%s", season %s, episode'
-							   ' %s (%s) to library') % (
-									   data['title'],
-									   season.getAttribute('index'),
-									   episode.getAttribute('index'),
-									   episode.getAttribute('title')))
+					unseenepisodes['episodes'].append({'season': season.getAttribute('index'), 'episode': episode.getAttribute('index')})
 
-				if self.options.rate:
-					rating = self.get_movie_rating(episode)
-					if rating:
-						episode_data = show_data.copy()
-						episode_data.update({
-								'season': season.getAttribute('index'),
-								'episode': episode.getAttribute('index'),
-								'rating': rating})
+		if debug:
+			LOG.info(pformat(allepisodes))
+		else:
+			try:
+				self._trakt_post('show/episode/library', allepisodes)
+			except:
+				LOG.info('Error submitting all episodes to trakt library')
 
-						LOG.info(('Rate episode "%s", season %s, episode'
-								  ' %s (%s) with "%s"') % (
-										  data['title'],
-										  season.getAttribute('index'),
-										  episode.getAttribute('index'),
-										  episode.getAttribute('title'),
-										  rating))
-						self._trakt_post('rate/episode', episode_data)
+		if debug:
+			LOG.info(pformat(unseenepisodes))
+		else:
+			try:
+				self._trakt_post('show/episode/unseen', unseenepisodes)
+			except:
+				LOG.info('Error submitting unseen episodes to trakt library')
 
-			if asWatched:
-				LOG.debug(('Mark "%s" episodes of the show %s as '
-						  'seen in trakt.tv') % (
-								  len(data['episodes']), data['title']))
-				self._trakt_post('show/episode/seen', data)
-			else:
-				LOG.debug(('Add "%s" episodes of the show %s to '
-						  'library in trakt.tv') % (
-								  len(data['episodes']), data['title']))
-				self._trakt_post('show/episode/library', data)
+		if debug:
+			LOG.info(pformat(seenepisodes))
+		else:
+			try:
+				self._trakt_post('show/episode/seen', seenepisodes)
+			except:
+				LOG.info('Error submitting seen episodes to trakt library')
 
 	def _get_plex_section_paths(self, type_):
 		"""Returns all paths to sections of a particular type.
