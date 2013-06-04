@@ -250,7 +250,7 @@ class Syncer(object):
 				else:
 					unseenepisodes['episodes'].append({'season': season.getAttribute('index'), 'episode': episode.getAttribute('index')})
 		
-		
+			LOG.info('Submitting %s to trakt...' % show_data['title'])
 			if self.options.debug:
 				LOG.info(pformat(allepisodes))
 			else:
