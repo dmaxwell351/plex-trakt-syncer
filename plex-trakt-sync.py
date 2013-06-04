@@ -110,6 +110,8 @@ class Syncer(object):
 			self.quit_with_error('Please define a trakt password (-p).')
 
 	def sync_movies(self):
+		LOG.info('Downloading movie metadata from Plex...')
+		
 		movie_nodes = tuple(self.plex_get_all_movies())
 
 		if movie_nodes:
@@ -124,6 +126,8 @@ class Syncer(object):
 					yield node
 
 	def sync_shows(self):
+		LOG.info('Downloading TV show metadata from Plex...')
+		
 		episode_data = self.plex_get_all_episodes()
 
 		if episode_data:
@@ -198,7 +202,7 @@ class Syncer(object):
 		
 		LOG.info('Adding all movies to the trakt library...')
 		try:
-			if debug:
+			if self.options.debug:
 				LOG.info(pformat({'movies': movies}))
 			else:
 				self._trakt_post('movie/library', {'movies': movies})
@@ -207,7 +211,7 @@ class Syncer(object):
 		
 		LOG.info('Marking watched movies as seen...')
 		try:
-			if debug:
+			if self.options.debug:
 				LOG.info(pformat({'movies': seen}))
 			else:			
 				self._trakt_post('movie/seen', {'movies': seen})
@@ -216,7 +220,7 @@ class Syncer(object):
 		
 		LOG.info('Marking unwatched movies as unseen...')	
 		try:
-			if debug:
+			if self.options.debug:
 				LOG.info(pformat({'movies': unseen}))
 			else:			
 				self._trakt_post('movie/unseen', {'movies': unseen})
@@ -244,7 +248,7 @@ class Syncer(object):
 				else:
 					unseenepisodes['episodes'].append({'season': season.getAttribute('index'), 'episode': episode.getAttribute('index')})
 
-		if debug:
+		if self.options.debug:
 			LOG.info(pformat(allepisodes))
 		else:
 			try:
@@ -252,7 +256,7 @@ class Syncer(object):
 			except:
 				LOG.info('Error submitting all episodes to trakt library')
 
-		if debug:
+		if self.options.debug:
 			LOG.info(pformat(unseenepisodes))
 		else:
 			try:
@@ -260,7 +264,7 @@ class Syncer(object):
 			except:
 				LOG.info('Error submitting unseen episodes to trakt library')
 
-		if debug:
+		if self.options.debug:
 			LOG.info(pformat(seenepisodes))
 		else:
 			try:
