@@ -48,8 +48,7 @@ class Syncer(object):
 		"""Parses the passed arguments.
 		"""
 
-		parser = OptionParser(version=VERSION, description=DESCRIPTION,
-							  epilog=EPILOG)
+		parser = OptionParser(version=VERSION, description=DESCRIPTION)
 
 		parser.add_option(
 				'-H', '--host', dest='plex_host', default='localhost',
@@ -99,7 +98,7 @@ class Syncer(object):
 		movie_nodes = tuple(self.plex_get_all_movies())
 
 		if movie_nodes:
-			self.trakt_report_all_movies(movie_nodes)
+			self.trakt_report_movies(movie_nodes)
 		else:
 			LOG.warning('No movies could be found in your '
 						'plex server.')
@@ -191,7 +190,7 @@ class Syncer(object):
 		return {'title': show.getAttribute('title'),
 				'year': show.getAttribute('year')}
 
-	def trakt_report_movies(self, nodes, asWatched):
+	def trakt_report_movies(self, nodes):
 		movies = []
 		seen = []
 		unseen = []
