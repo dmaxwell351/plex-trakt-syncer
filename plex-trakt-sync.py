@@ -228,6 +228,8 @@ class Syncer(object):
 			LOG.info('Error submitting unseen movies to trakt')
 
 	def trakt_report_episodes(self, episode_data):
+		LOG.info('Building submission to trakt:')
+		
 		for show, episodes in episode_data:
 			show_data = self.get_show_data(show)
 			
@@ -247,30 +249,32 @@ class Syncer(object):
 					seenepisodes['episodes'].append({'season': season.getAttribute('index'), 'episode': episode.getAttribute('index')})
 				else:
 					unseenepisodes['episodes'].append({'season': season.getAttribute('index'), 'episode': episode.getAttribute('index')})
+		
+		
+			if self.options.debug:
+				LOG.info(pformat(allepisodes))
+			else:
+				try:
+					self._trakt_post('show/episode/library', allepisodes)
+				except:
+					LOG.info('Error submitting all episodes to trakt library')
 
-		if self.options.debug:
-			LOG.info(pformat(allepisodes))
-		else:
-			try:
-				self._trakt_post('show/episode/library', allepisodes)
-			except:
-				LOG.info('Error submitting all episodes to trakt library')
+			if self.options.debug:
+				LOG.info(pformat(unseenepisodes))
+			else:
+				try:
+					self._trakt_post('show/episode/unseen', unseenepisodes)
+				except:
+					LOG.info('Error submitting unseen episodes to trakt library')
 
-		if self.options.debug:
-			LOG.info(pformat(unseenepisodes))
-		else:
-			try:
-				self._trakt_post('show/episode/unseen', unseenepisodes)
-			except:
-				LOG.info('Error submitting unseen episodes to trakt library')
-
-		if self.options.debug:
-			LOG.info(pformat(seenepisodes))
-		else:
-			try:
-				self._trakt_post('show/episode/seen', seenepisodes)
-			except:
-				LOG.info('Error submitting seen episodes to trakt library')
+			if self.options.debug:
+				LOG.info(pformat(seenepisodes))
+			else:
+				try:
+					self._trakt_post('show/episode/seen', seenepisodes)
+				except:
+					LOG.info('Error submitting seen episodes to trakt library')
+		
 
 	def _get_plex_section_paths(self, type_):
 		"""Returns all paths to sections of a particular type.
