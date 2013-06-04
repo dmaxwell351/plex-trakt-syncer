@@ -7,9 +7,7 @@ A simple console script for updating your Trakt_ profile with the infos from you
 Features
 ========
 
-- Marks **movies** and **show episodes** watched in Plex_ when watched in your Trakt_ profile.
-- Optionally flages the movies and show episodes in Trakt_ with "love" or "hate" according to the rating in Plex_.
-- Optionally adds unwatched movies and show episodes to your trakt library.
+- Adds entire Plex library to trakt, then marks movies and episodes as seen or unseen.
 
 Scrobbling
 ==========
@@ -53,22 +51,9 @@ Usage
                             trakt.tv username
       -p PASSWORD, --password=PASSWORD
                             trakt.tv password
-      --no-movies           Do not sync watched movies.
-      --no-shows            Do not sync watched shows.
       -k API-KEY, --key=API-KEY
                             trakt.tv API key
-      -r, --rate            Submit plex movie ratings to trakt.
-      -a, --all             Adds unwatched movies and show episodes to trakt library.
-      --max-hate=1-10       Maxmimum plex rating for flagging a movie with "hate"
-                            (In combination with -r option, defaults to 3).
-      --min-love=1-10       Minimum plex rating for flagging a movie with "love"
-                            (In combination with -r option, defaults to 8).
       -v, --verbose         Print more verbose debugging informations.
-
-     ** Rating **           The plex rating allows to give up to 5 stars for a
-    movie, but you can also give half stars, so there are 10 steps for the rating.
-    The configurable --min-hate and --max-love options take a value between 1 and
-    10. Movies which are not yet rated in plex are not flagged at all.
 
 .. %usage-end%
 
