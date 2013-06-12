@@ -128,7 +128,7 @@ class Syncer(object):
 		if trakt_movie_nodes != None and plex_movie_nodes != None:
 			for plexMovieNode in plex_movie_nodes:
 				for traktMovieNode in trakt_movie_nodes:
-					if levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']) <= 4 and plexMovieNode.getAttribute('year') == traktMovieNode['year']:
+					if self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']) <= 4 and plexMovieNode.getAttribute('year') == traktMovieNode['year']:
 						found = True
 						break
 					else:
@@ -138,6 +138,19 @@ class Syncer(object):
 					LOG.info("     %s (%s) is missing from trakt..." % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
 				else:
 					continue
+				
+			for traktMovieNode in trakt_movie_nodes:
+				for plexMovieNode in plex_movie_nodes:
+					if levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']) <= 4 and plexMovieNode.getAttribute('year') == traktMovieNode['year']:
+						found = True
+						break
+					else:
+						continue
+
+				if not found:
+					LOG.info("     %s (%s) is missing from Plex..." % (traktMovieNode['title'], traktMovieNode['year']))
+				else:
+					continue			
 		else:
 			LOG.info('No movies found.')
 
@@ -399,8 +412,7 @@ class Syncer(object):
 			LOG.info('Status code: %s' % response.status_code)
 			return None
 
-	def levenshtein(a,b):
-		"Calculates the Levenshtein distance between a and b."
+	def _levenshtein(a, b):
 		n, m = len(a), len(b)
 		if n > m:
 			# Make sure n <= m, to use O(min(n,m)) space
