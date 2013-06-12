@@ -14,6 +14,13 @@ Scrobbling
 
 At the current state this script does not scrobble. Feel free to modify the script and start a pull-request.
 
+Prerequisites
+=======
+
+Requests is required (http://docs.python-requests.org/en/latest/).
+
+See http://docs.python-requests.org/en/latest/user/install/ for installation instructions.
+
 Install
 =======
 
