@@ -3,6 +3,7 @@
 from optparse import OptionParser
 from pprint import pformat
 from xml.dom.minidom import parseString
+from Levenshtein import *
 import hashlib
 import json
 import logging
@@ -128,7 +129,7 @@ class Syncer(object):
 		if trakt_movie_nodes != None and plex_movie_nodes != None:
 			for plexMovieNode in plex_movie_nodes:
 				for traktMovieNode in trakt_movie_nodes:
-					if plexMovieNode.getAttribute('title') == traktMovieNode['title'] and plexMovieNode.getAttribute('year') == traktMovieNode['year']:
+					if distance(plexMovieNode.getAttribute('title'), traktMovieNode['title']) <= 4 and plexMovieNode.getAttribute('year') == traktMovieNode['year']:
 						found = True
 						break
 					else:
