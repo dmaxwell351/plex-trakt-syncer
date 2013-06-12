@@ -10,7 +10,8 @@ import os
 import sys
 import urllib
 import urllib2
-
+import requests
+import pprint
 
 VERSION = '1.0'
 
@@ -37,9 +38,12 @@ class Syncer(object):
 
 		self.parse_arguments(args)
 
+		if self.options.compare:
+			self.find_missing_from_trakt()
+			sys.exit(1)
+			
 		if not self.options.episodesonly:
 			self.sync_movies()
-		
 		if not self.options.moviesonly:
 			self.sync_shows()
 
@@ -93,6 +97,10 @@ class Syncer(object):
 		parser.add_option(
 		                '-e', '--episodes-only', dest='episodesonly', action='store_true',
 		                help='Only sync the TV sections of Plex.')
+		
+		parser.add_option(
+		                '-c', '--compare', dest='compare', action='store_true',
+		                help='Find missing items in trakt.')
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -108,6 +116,30 @@ class Syncer(object):
 
 		if not self.options.trakt_password:
 			self.quit_with_error('Please define a trakt password (-p).')
+
+	def find_missing_from_trakt(self):
+		LOG.info('Comparing movie metadata from Plex to Trakt...')
+		
+		plex_movie_nodes = tuple(self.plex_get_all_movies())
+		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
+		
+		found = False;
+		
+		if trakt_movie_nodes != None and plex_movie_nodes != None:
+			for plexMovieNode in plex_movie_nodes:
+				for traktMovieNode in trakt_movie_nodes:
+					if plexMovieNode.getAttribute('title') == traktMovieNode['title'] and plexMovieNode.getAttribute('year') == traktMovieNode['year']:
+						found = True
+						break
+					else:
+						continue
+
+				if not found:
+					LOG.info("     %s (%s) is missing from trakt..." % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
+				else:
+					continue
+		else:
+			LOG.info('No movies found.')
 
 	def sync_movies(self):
 		LOG.info('Downloading movie metadata from Plex...')
@@ -350,6 +382,22 @@ class Syncer(object):
 		else:
 			self.quit_with_error('Trakt request failed with %s' % resp_data)
 
+	def _trakt_get(self, path):
+		"""Gets information from trakt.
+		"""
+		url = 'http://api.trakt.tv/%s/%s/%s' % (path, self.options.trakt_key, self.options.trakt_username)
+
+		try:
+			response = requests.get(url)
+		except urllib2.URLError, e:
+			LOG.error(e)
+			raise
+
+		if response.status_code == requests.codes.ok:
+			return response.json()
+		else:
+			LOG.info('Status code: %s' % response.status_code)
+			return None
 
 if __name__ == '__main__':
 	try:
