@@ -412,7 +412,7 @@ class Syncer(object):
 			LOG.info('Status code: %s' % response.status_code)
 			return None
 
-	def _levenshtein(a, b):
+	def _levenshtein(self, a, b):
 		n, m = len(a), len(b)
 		if n > m:
 			# Make sure n <= m, to use O(min(n,m)) space
