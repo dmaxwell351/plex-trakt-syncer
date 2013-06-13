@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from optparse import OptionParser
 from pprint import pformat
@@ -12,6 +13,7 @@ import urllib
 import urllib2
 import requests
 import pprint
+import string
 
 VERSION = '1.0'
 
@@ -119,38 +121,69 @@ class Syncer(object):
 
 	def find_missing_from_trakt(self):
 		LOG.info('Comparing movie metadata from Plex to Trakt...')
-		
+
+		progress = 0
 		plex_movie_nodes = tuple(self.plex_get_all_movies())
 		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
+		found_nodes = []
+		
+#		LOG.info('Plex Count: %s' % len(plex_movie_nodes))
+#		LOG.info('Trakt Count: %s' % len(trakt_movie_nodes))
 		
 		found = False;
 		
 		if trakt_movie_nodes != None and plex_movie_nodes != None:
 			for plexMovieNode in plex_movie_nodes:
 				for traktMovieNode in trakt_movie_nodes:
-					if self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']) <= 4 and plexMovieNode.getAttribute('year') == traktMovieNode['year']:
+					if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) <= 2 and int(plexMovieNode.getAttribute('year')) == int(traktMovieNode['year']) and traktMovieNode not in found_nodes:
+						if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) > 0:
+							LOG.info("     %s (%s) was matched with a distance of %s to %s (%s)" % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']), traktMovieNode['title'], traktMovieNode['year']))
+						
+						found_nodes.append(traktMovieNode)
 						found = True
 						break
 					else:
 						continue
 
 				if not found:
-					LOG.info("     %s (%s) is missing from trakt..." % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
+					LOG.info("*****%s (%s) is missing from trakt..." % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
 				else:
+#					progress += 1
+#					sys.stdout.write('\r[{0}] {1}/{2}'.format('#'*((progress/len(plex_movie_nodes))*100), progress, len(plex_movie_nodes)))
+#					sys.stdout.flush()
+					found = False
 					continue
-				
+
+			progress = 0
+			sys.stdout.write('\r')
+			sys.stdout.flush()
+			
+			LOG.info('Comparing movie metadata from Trakt to Plex...')
+			sys.stdout.write('\r')
+			sys.stdout.flush()			
+			
+			found_nodes = []
+			
 			for traktMovieNode in trakt_movie_nodes:
 				for plexMovieNode in plex_movie_nodes:
-					if levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']) <= 4 and plexMovieNode.getAttribute('year') == traktMovieNode['year']:
+					if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) <= 2 and int(plexMovieNode.getAttribute('year')) == int(traktMovieNode['year'] and plexMovieNode not in found_nodes):
+						if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) > 0:
+							LOG.info("     %s (%s) was matched with a distance of %s to %s (%s)" % (traktMovieNode['title'], traktMovieNode['year'], self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']), plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
+							
+						found_nodes.append(plexMovieNode)
 						found = True
 						break
 					else:
 						continue
 
 				if not found:
-					LOG.info("     %s (%s) is missing from Plex..." % (traktMovieNode['title'], traktMovieNode['year']))
+					LOG.info("*****%s (%s) is missing from Plex..." % (traktMovieNode['title'], traktMovieNode['year']))
 				else:
-					continue			
+#					progress += 1
+#					sys.stdout.write('\r[{0}] {1}/{2}'.format('#'*((progress/len(plex_movie_nodes))*100), progress, len(plex_movie_nodes)))
+#					sys.stdout.flush()
+					found = False
+					continue	
 		else:
 			LOG.info('No movies found.')
 
