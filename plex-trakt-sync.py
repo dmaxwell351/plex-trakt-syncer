@@ -41,6 +41,10 @@ class Syncer(object):
 
 		self.parse_arguments(args)
 
+		if self.options.compareuser:
+			self.compare_library_with_another()
+			sys.exit(1)
+
 		if self.options.compare:
 			self.find_missing_from_trakt()
 			sys.exit(1)
@@ -104,6 +108,11 @@ class Syncer(object):
 		parser.add_option(
 		                '-c', '--compare', dest='compare', action='store_true',
 		                help='Find missing items in trakt.')
+		
+		parser.add_option(
+		                '-cu', '--compare-user', dest='compareuser',
+		                metavar='COMPAREUSER',
+		                help='Compare your trakt movie library with another user\'s.')	
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -119,6 +128,58 @@ class Syncer(object):
 
 		if not self.options.trakt_password:
 			self.quit_with_error('Please define a trakt password (-p).')
+
+	def self.compare_library_with_another(self):
+		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.trakt_username)
+		own_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
+		
+		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.compareuser)
+		other_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json', self.options.compareuser))
+		
+		found_nodes = []
+		
+		found = False;
+		
+		if trakt_movie_nodes != None and plex_movie_nodes != None:
+			LOG.info('Comparing movie metadata between the two users...')
+			LOG.info('')
+			LOG.info('     Comparing %s\'s library to %s\'s...' % (self.options.trakt_username, self.options.compareuser))			
+			for ownMovieNode in own_trakt_movie_nodes:
+				for otherMovieNode in other_trakt_movie_nodes:
+					if ownMovieNode['imdb_id'] == otherMovieNode['imdb_id'] and otherMovieNode not in found_nodes:						
+						found_nodes.append(otherMovieNode)
+						found = True
+						break
+					else:
+						continue
+
+				if not found:
+					LOG.info("     *****%s (%s) is missing from %s\'s library..." % (ownMovieNode['title'], ownMovieNode['year'], self.options.compareuser))
+				else:
+					found = False
+					continue
+			
+			LOG.info('Comparing movie metadata from Trakt to Plex...')
+			found_nodes = []
+			
+			LOG.info('')
+			LOG.info('     Comparing %s\'s library to %s\'s...' % (self.options.compareuser, self.options.trakt_username))
+			for otherMovieNode in other_trakt_movie_nodes:
+				for ownMovieNode in own_trakt_movie_nodes:
+					if ownMovieNode['imdb_id'] == otherMovieNode['imdb_id'] and ownMovieNode not in found_nodes:						
+						found_nodes.append(ownMovieNode)
+						found = True
+						break
+					else:
+						continue
+			
+				if not found:
+					LOG.info("     *****%s (%s) is missing from %s\'s library..." % (otherMovieNode['title'], otherMovieNode['year'], self.options.trakt_username))
+				else:
+					found = False
+					continue			
+		else:
+			LOG.info('No movies found.')		
 
 	def find_missing_from_trakt(self):
 		LOG.info('     Downloading Plex metadata...')
@@ -425,10 +486,10 @@ class Syncer(object):
 		else:
 			self.quit_with_error('Trakt request failed with %s' % resp_data)
 
-	def _trakt_get(self, path):
+	def _trakt_get(self, path, username = self.options.trakt_username):
 		"""Gets information from trakt.
 		"""
-		url = 'http://api.trakt.tv/%s/%s/%s' % (path, self.options.trakt_key, self.options.trakt_username)
+		url = 'http://api.trakt.tv/%s/%s/%s' % (path, self.options.trakt_key, username)
 
 		try:
 			response = requests.get(url)
