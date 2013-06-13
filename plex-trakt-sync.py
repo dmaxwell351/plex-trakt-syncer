@@ -160,7 +160,7 @@ class Syncer(object):
 						continue
 
 				if not found:
-					LOG.info("     *****%s (%s) is missing from Plex..." % (traktMovieNode['title', traktMovieNode['year']))
+					LOG.info("     *****%s (%s) is missing from Plex..." % (traktMovieNode['title'], traktMovieNode['year']))
 				else:
 					found = False
 					continue
