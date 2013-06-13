@@ -140,7 +140,7 @@ class Syncer(object):
 				LOG.info('Searching Trakt for %s (%s) - %s' % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self.plex_get_imdb_id(plexMovieNode.getAttribute('key'))))
 				for traktMovieNode in trakt_movie_nodes:
 #					if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) <= 2 and int(plexMovieNode.getAttribute('year')) == int(traktMovieNode['year']) and traktMovieNode not in found_nodes:
-					if self.plex_get_imdb_id(plexMovieNode.getAttribute('key')) == traktMovieNode['imdb_id']:
+					if self.plex_get_imdb_id(plexMovieNode.getAttribute('key')) == traktMovieNode['imdb_id'] and traktMovieNode not in found_nodes:
 #						if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) > 0:
 #							LOG.info("     %s (%s) was matched with a distance of %s to %s (%s)" % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']), traktMovieNode['title'], traktMovieNode['year']))
 						
@@ -223,7 +223,7 @@ class Syncer(object):
 			except:
 				return '0000000'
 			
-		return imdb_id
+		return str(imdb_id)
 
 	def sync_shows(self):
 		LOG.info('Downloading TV show metadata from Plex...')
