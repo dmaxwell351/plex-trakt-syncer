@@ -129,7 +129,7 @@ class Syncer(object):
 		if not self.options.trakt_password:
 			self.quit_with_error('Please define a trakt password (-p).')
 
-	def self.compare_library_with_another(self):
+	def compare_library_with_another(self):
 		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.trakt_username)
 		own_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
 		
