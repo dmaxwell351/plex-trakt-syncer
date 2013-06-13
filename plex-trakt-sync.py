@@ -110,7 +110,7 @@ class Syncer(object):
 		                help='Find missing items in trakt.')
 		
 		parser.add_option(
-		                '-cu', '--compare-user', dest='compareuser',
+		                '-x', '--compare-user', dest='compareuser',
 		                metavar='COMPAREUSER',
 		                help='Compare your trakt movie library with another user\'s.')	
 
