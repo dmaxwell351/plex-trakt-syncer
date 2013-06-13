@@ -139,7 +139,6 @@ class Syncer(object):
 			for plexMovieNode in plex_movie_nodes:
 				LOG.info('%s (%s) - %s' % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self.plex_get_imdb_id(plexMovieNode.getAttribute('key'))))
 				for traktMovieNode in trakt_movie_nodes:
-					LOG.info('     %s' % traktMovieNode['imdb_id'])
 #					if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) <= 2 and int(plexMovieNode.getAttribute('year')) == int(traktMovieNode['year']) and traktMovieNode not in found_nodes:
 					if self.plex_get_imdb_id(plexMovieNode.getAttribute('key')) == traktMovieNode['imdb_id'] and traktMovieNode not in found_nodes:
 #						if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) > 0:
