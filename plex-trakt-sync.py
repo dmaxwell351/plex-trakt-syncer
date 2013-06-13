@@ -137,7 +137,6 @@ class Syncer(object):
 		other_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json', self.options.compareuser))
 		
 		found_nodes = []
-		
 		found = False;
 		
 		if own_trakt_movie_nodes != None and other_trakt_movie_nodes != None:
@@ -159,8 +158,8 @@ class Syncer(object):
 					found = False
 					continue
 			
-			LOG.info('Comparing movie metadata from Trakt to Plex...')
 			found_nodes = []
+			found = False;
 			
 			LOG.info('')
 			LOG.info('     Comparing %s\'s library to %s\'s...' % (self.options.compareuser, self.options.trakt_username))
@@ -210,6 +209,7 @@ class Syncer(object):
 			
 			LOG.info('Comparing movie metadata from Trakt to Plex...')
 			found_nodes = []
+			found = False;
 			
 			for traktMovieNode in trakt_movie_nodes:
 				for plexMovieNode in plex_movie_nodes:
