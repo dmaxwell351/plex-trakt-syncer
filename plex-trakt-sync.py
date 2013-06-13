@@ -140,7 +140,7 @@ class Syncer(object):
 		
 		found = False;
 		
-		if trakt_movie_nodes != None and plex_movie_nodes != None:
+		if own_trakt_movie_nodes != None and other_trakt_movie_nodes != None:
 			LOG.info('Comparing movie metadata between the two users...')
 			LOG.info('')
 			LOG.info('     Comparing %s\'s library to %s\'s...' % (self.options.trakt_username, self.options.compareuser))			
