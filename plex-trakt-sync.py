@@ -121,29 +121,20 @@ class Syncer(object):
 			self.quit_with_error('Please define a trakt password (-p).')
 
 	def find_missing_from_trakt(self):
-		LOG.info('Comparing movie metadata from Plex to Trakt...')
-
-		progress = 0
 		LOG.info('     Downloading Plex metadata...')
 		plex_movie_nodes = tuple(self.plex_get_all_movies())
 		LOG.info('     Downloading Trakt metadata...')
 		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
 		found_nodes = []
 		
-#		LOG.info('Plex Count: %s' % len(plex_movie_nodes))
-#		LOG.info('Trakt Count: %s' % len(trakt_movie_nodes))
-		
 		found = False;
+		
+		LOG.info('Comparing movie metadata from Plex to Trakt...')
 		
 		if trakt_movie_nodes != None and plex_movie_nodes != None:
 			for plexMovieNode in plex_movie_nodes:
-				LOG.info('Searching Trakt for %s (%s) - %s' % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self.plex_get_imdb_id(plexMovieNode.getAttribute('key'))))
 				for traktMovieNode in trakt_movie_nodes:
-#					if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) <= 2 and int(plexMovieNode.getAttribute('year')) == int(traktMovieNode['year']) and traktMovieNode not in found_nodes:
-					if self.plex_get_imdb_id(plexMovieNode.getAttribute('key')) == traktMovieNode['imdb_id'] and traktMovieNode not in found_nodes:
-#						if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) > 0:
-#							LOG.info("     %s (%s) was matched with a distance of %s to %s (%s)" % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']), traktMovieNode['title'], traktMovieNode['year']))
-						
+					if self.plex_get_imdb_id(plexMovieNode.getAttribute('key')) == traktMovieNode['imdb_id'] and traktMovieNode not in found_nodes:						
 						found_nodes.append(traktMovieNode)
 						found = True
 						break
@@ -151,30 +142,17 @@ class Syncer(object):
 						continue
 
 				if not found:
-					LOG.info("     *****%s (%s) is missing from trakt..." % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
+					LOG.info("     *****%s (%s) is missing from Trakt..." % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
 				else:
-#					progress += 1
-#					sys.stdout.write('\r[{0}] {1}/{2}'.format('#'*((progress/len(plex_movie_nodes))*100), progress, len(plex_movie_nodes)))
-#					sys.stdout.flush()
 					found = False
 					continue
-
-			progress = 0
-			sys.stdout.write('\r')
-			sys.stdout.flush()
 			
 			LOG.info('Comparing movie metadata from Trakt to Plex...')
-			sys.stdout.write('\r')
-			sys.stdout.flush()			
-			
 			found_nodes = []
 			
 			for traktMovieNode in trakt_movie_nodes:
 				for plexMovieNode in plex_movie_nodes:
-					if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) <= 2 and int(plexMovieNode.getAttribute('year')) == int(traktMovieNode['year'] and plexMovieNode not in found_nodes):
-						if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) > 0:
-							LOG.info("     %s (%s) was matched with a distance of %s to %s (%s)" % (traktMovieNode['title'], traktMovieNode['year'], self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']), plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
-							
+					if self.plex_get_imdb_id(plexMovieNode.getAttribute('key')) == traktMovieNode['imdb_id'] and plexMovieNode not in found_nodes:
 						found_nodes.append(plexMovieNode)
 						found = True
 						break
@@ -182,13 +160,10 @@ class Syncer(object):
 						continue
 
 				if not found:
-					LOG.info("*****%s (%s) is missing from Plex..." % (traktMovieNode['title'], traktMovieNode['year']))
+					LOG.info("     *****%s (%s) is missing from Plex..." % (traktMovieNode['title', traktMovieNode['year']))
 				else:
-#					progress += 1
-#					sys.stdout.write('\r[{0}] {1}/{2}'.format('#'*((progress/len(plex_movie_nodes))*100), progress, len(plex_movie_nodes)))
-#					sys.stdout.flush()
 					found = False
-					continue	
+					continue
 		else:
 			LOG.info('No movies found.')
 
@@ -219,7 +194,7 @@ class Syncer(object):
 		if len(metadata) > 0:
 			guid = node.getAttribute('guid')
 			try:
-				imdb_id = re.search('imdb://(tt[0-9]{7})', guid).groups(1)(0)
+				imdb_id = re.search('imdb://(tt[0-9]{7})', guid).groups(1)[0]
 			except:
 				return '0000000'
 			
