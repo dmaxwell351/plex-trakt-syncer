@@ -216,7 +216,7 @@ class Syncer(object):
 		if len(metadata) > 0:
 			guid = node.getAttribute('guid')
 			try:
-				imdb_id = re.search('imdb://tt[0-9]{7}', guid).groups(1)
+				imdb_id = re.search('imdb://(tt[0-9]{7})', guid).groups(1)
 			except:
 				return '0000000'
 			
