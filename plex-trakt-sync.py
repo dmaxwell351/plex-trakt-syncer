@@ -14,6 +14,7 @@ import urllib2
 import requests
 import pprint
 import string
+import re
 
 VERSION = '1.0'
 
@@ -134,25 +135,26 @@ class Syncer(object):
 		
 		if trakt_movie_nodes != None and plex_movie_nodes != None:
 			for plexMovieNode in plex_movie_nodes:
-				for traktMovieNode in trakt_movie_nodes:
-					if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) <= 2 and int(plexMovieNode.getAttribute('year')) == int(traktMovieNode['year']) and traktMovieNode not in found_nodes:
-						if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) > 0:
-							LOG.info("     %s (%s) was matched with a distance of %s to %s (%s)" % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']), traktMovieNode['title'], traktMovieNode['year']))
-						
-						found_nodes.append(traktMovieNode)
-						found = True
-						break
-					else:
-						continue
+				LOG.info('%s (%s) - %s' % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self.plex_get_imdb_id(plexMovieNode.getAttribute('key'))))
+#				for traktMovieNode in trakt_movie_nodes:
+#					if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) <= 2 and int(plexMovieNode.getAttribute('year')) == int(traktMovieNode['year']) and traktMovieNode not in found_nodes:
+#						if self._levenshtein(plexMovieNode.getAttribute('title').lower(), traktMovieNode['title'].lower()) > 0:
+#							LOG.info("     %s (%s) was matched with a distance of %s to %s (%s)" % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), self._levenshtein(plexMovieNode.getAttribute('title'), traktMovieNode['title']), traktMovieNode['title'], traktMovieNode['year']))
+#						
+#						found_nodes.append(traktMovieNode)
+#						found = True
+#						break
+#					else:
+#						continue
 
-				if not found:
-					LOG.info("*****%s (%s) is missing from trakt..." % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
-				else:
+#				if not found:
+#					LOG.info("*****%s (%s) is missing from trakt..." % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year')))
+#				else:
 #					progress += 1
 #					sys.stdout.write('\r[{0}] {1}/{2}'.format('#'*((progress/len(plex_movie_nodes))*100), progress, len(plex_movie_nodes)))
 #					sys.stdout.flush()
-					found = False
-					continue
+#					found = False
+#					continue
 
 			progress = 0
 			sys.stdout.write('\r')
@@ -202,6 +204,20 @@ class Syncer(object):
 		for section_path in self._get_plex_section_paths('movie'):
 			for node in self._plex_request(section_path + 'all'):
 					yield node
+
+	def plex_get_imdb_id(self, path):
+		metadata = []
+		guid = ''
+		imdb_id = ''
+		
+		for node in self._plex_request(path):
+			metadata.append(node)
+
+		if len(metadata) > 0:
+			guid = node.getAttribute('guid')
+			imdb_id = re.search('imdb://tt[0-9]{7}', guid).group(0)
+			
+		return imdb_id
 
 	def sync_shows(self):
 		LOG.info('Downloading TV show metadata from Plex...')
