@@ -208,14 +208,17 @@ class Syncer(object):
 	def plex_get_imdb_id(self, path):
 		metadata = []
 		guid = ''
-		imdb_id = ''
+		imdb_id = '0000000'
 		
 		for node in self._plex_request(path):
 			metadata.append(node)
 
 		if len(metadata) > 0:
 			guid = node.getAttribute('guid')
-			imdb_id = re.search('imdb://tt[0-9]{7}', guid).group(0)
+			try:
+				imdb_id = re.search('imdb://tt[0-9]{7}', guid).groups(1)
+			except:
+				return '0000000'
 			
 		return imdb_id
 
