@@ -486,9 +486,13 @@ class Syncer(object):
 		else:
 			self.quit_with_error('Trakt request failed with %s' % resp_data)
 
-	def _trakt_get(self, path, username = self.options.trakt_username):
+	def _trakt_get(self, path, username = ''):
 		"""Gets information from trakt.
 		"""
+
+		if username == '':
+			username = self.options.trakt_username;
+		
 		url = 'http://api.trakt.tv/%s/%s/%s' % (path, self.options.trakt_key, username)
 
 		try:
