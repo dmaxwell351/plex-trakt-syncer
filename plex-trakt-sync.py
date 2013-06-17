@@ -242,7 +242,7 @@ class Syncer(object):
 	def plex_get_all_movies(self):
 		for section_path in self._get_plex_section_paths('movie'):
 			for node in self._plex_request(section_path + 'all'):
-					yield node
+ 					yield node
 
 	def plex_get_imdb_id(self, path):
 		metadata = []
@@ -309,7 +309,8 @@ class Syncer(object):
 		return {'title': node.getAttribute('title'),
 				'year': node.getAttribute('year'),
 				'plays': node.getAttribute('viewCount'),
-				'last_played': node.getAttribute('updatedAt')}
+				'last_played': node.getAttribute('updatedAt'),
+				'imdb_id': self.plex_get_imdb_id(node.getAttribute('key'))}
 
 	def get_show_data(self, show):
 		return {'title': show.getAttribute('title'),
@@ -320,18 +321,18 @@ class Syncer(object):
 		seen = []
 		unseen = []
 
-		LOG.info('Building submission to trakt:')
+		LOG.info('Building submission to trakt...')
 
 		for node in nodes:
 			movie = self.get_movie_data(node)
 
 			if node.getAttribute('viewCount'):
-				LOG.info('     "%s (%s)" as seen' % (
-						movie['title'], movie['year']))
+#				LOG.info('     "%s (%s)" as seen' % (
+#						movie['title'], movie['year']))
 				seen.append(movie)
 			else:
-				LOG.info('     "%s (%s)" as unseen' % (
-						movie['title'], movie['year']))
+#				LOG.info('     "%s (%s)" as unseen' % (
+#						movie['title'], movie['year']))
 				unseen.append(movie)
 			
 			movies.append(movie)
@@ -354,7 +355,7 @@ class Syncer(object):
 		except:
 			LOG.info('Error submitting seen movies to trakt')
 		
-		LOG.info('Marking unwatched movies as unseen...')	
+		LOG.info('Marking unwatched movies as unseen...')
 		try:
 			if self.options.debug:
 				LOG.info(pformat({'movies': unseen}))
