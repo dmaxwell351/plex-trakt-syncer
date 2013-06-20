@@ -41,6 +41,10 @@ class Syncer(object):
 
 		self.parse_arguments(args)
 
+		if self.options.filename:
+			self.export_plex_imdbids(self.options.filename, '_')
+			sys.exit(1)
+
 		if self.options.compareuser:
 			self.compare_library_with_another()
 			sys.exit(1)
@@ -94,25 +98,31 @@ class Syncer(object):
 				help='Print more verbose debugging informations.')
 		
 		parser.add_option(
-		                '-d', '--debug', dest='debug', action='store_true',
-		                help='Prints the JSON instead of actually submitting to trakt.')
+				'-d', '--debug', dest='debug', action='store_true',
+				help='Prints the JSON instead of actually submitting to trakt.')
 		
 		parser.add_option(
-		                '-m', '--movies-only', dest='moviesonly', action='store_true',
-		                help='Only sync the movie sections of Plex.')
+				'-m', '--movies-only', dest='moviesonly', action='store_true', 
+				help='Only sync the movie sections of Plex.')
 		
 		parser.add_option(
-		                '-e', '--episodes-only', dest='episodesonly', action='store_true',
-		                help='Only sync the TV sections of Plex.')
+				'-e', '--episodes-only', dest='episodesonly', action='store_true', 
+				help='Only sync the TV sections of Plex.')
 		
 		parser.add_option(
-		                '-c', '--compare', dest='compare', action='store_true',
-		                help='Find missing items in trakt.')
+				'-c', '--compare', dest='compare', action='store_true', 
+				help='Find missing items in trakt.')
 		
 		parser.add_option(
-		                '-x', '--compare-user', dest='compareuser',
-		                metavar='COMPAREUSER',
-		                help='Compare your trakt movie library with another user\'s.')	
+				'-x', '--compare-user', dest='compareuser',
+				metavar='COMPAREUSER',
+				help='Compare your trakt movie library with another user\'s.')
+				
+		parser.add_option(
+				'-f', '--file-export', dest='filename', 
+				metavar='FILENAME',
+				help='Export Plex IMDB IDs to a file')
+
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -227,6 +237,32 @@ class Syncer(object):
 					continue
 		else:
 			LOG.info('No movies found.')
+
+	def export_plex_imdbids(self, filename, delimeter = '\n'):
+		LOG.info('Downloading Plex metadata...')
+		plex_movie_nodes = tuple(self.plex_get_all_movies())
+		
+		LOG.info('Exporting data to file...')
+		f = open(filename, 'w')
+		f2 = open('%s_errors' % filename, 'w')
+		
+		imdbid = '0000000'
+		first = True
+		
+		for plexMovieNode in plex_movie_nodes:
+			imdbid = self.plex_get_imdb_id(plexMovieNode.getAttribute('key'))
+			
+			if imdbid != '0000000':
+				if first:
+					f.write('%s' % imdbid)
+					first = False
+				else:
+					f.write('%s%s' % (delimeter, imdbid))
+			else:
+				f2.write('%s (%s) - %s\n' % (plexMovieNode.getAttribute('title'), plexMovieNode.getAttribute('year'), plexMovieNode.getAttribute('key')))
+		
+		f.close()
+		f2.close()
 
 	def sync_movies(self):
 		LOG.info('Downloading movie metadata from Plex...')
