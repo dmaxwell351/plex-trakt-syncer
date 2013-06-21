@@ -165,7 +165,7 @@ class Syncer(object):
 	
 	def test_trakt_secure_connection(self):
 		url = 'http://api.trakt.tv/movie/library/%s' % self.options.trakt_key
-		postdata = {'username': username, 'password': password}
+		postdata = {'username': self.options.trakt_username, 'password': self.options.trakt_password_hash}
 		
 		movies = []
 		movie1 = {"imdb_id":"tt1111422", "title":"The Taking of Pelham 1 2 3", "year":"2009"}
