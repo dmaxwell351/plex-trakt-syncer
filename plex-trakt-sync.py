@@ -143,7 +143,7 @@ class Syncer(object):
 		                help='Export trakt password as a hash')
 
 		parser.add_option(
-		                '-t', '--test', dest='testTrakt',
+		                '-t', '--test', dest='testTrakt', action='store_true',
 		                help='Test trakt connection')
 
 		self.options, self.arguments = parser.parse_args(args)
