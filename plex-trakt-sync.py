@@ -33,8 +33,6 @@ LOG = logging.getLogger('plex-trakt-syncer')
 LOG.addHandler(logging.StreamHandler())
 LOG.setLevel(logging.INFO)
 
-IsUsingPasswordHash = False
-
 class Syncer(object):
 
 	def __call__(self, args=None):
@@ -156,9 +154,6 @@ class Syncer(object):
 			if not self.options.compareuser and not self.options.compare:
 				if not self.options.trakt_password and not self.options.trakt_password_hash:
 					self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
-
-		if self.options.trakt_password_hash:
-			IsUsingPasswordHash = True
 
 	def compare_library_with_another(self):
 		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.trakt_username)
@@ -413,7 +408,7 @@ class Syncer(object):
 			if self.options.debug:
 				LOG.info(pformat({'movies': movies}))
 			else:
-				self._trakt_post('movie/library', {'movies': movies}, self.options.trakt_username, password, IsUsingPasswordHash)
+				self._trakt_post('movie/library', {'movies': movies}, self.options.trakt_username, password, True if self.options.trakt_password_hash else False)
 		except:
 			LOG.info('Error submitting all movies to trakt library')
 		
@@ -422,7 +417,7 @@ class Syncer(object):
 			if self.options.debug:
 				LOG.info(pformat({'movies': seen}))
 			else:			
-				self._trakt_post('movie/seen', {'movies': seen}, self.options.trakt_username, password, IsUsingPasswordHash)
+				self._trakt_post('movie/seen', {'movies': seen}, self.options.trakt_username, password, True if self.options.trakt_password_hash else False)
 		except:
 			LOG.info('Error submitting seen movies to trakt')
 		
@@ -431,7 +426,7 @@ class Syncer(object):
 			if self.options.debug:
 				LOG.info(pformat({'movies': unseen}))
 			else:			
-				self._trakt_post('movie/unseen', {'movies': unseen}, self.options.trakt_username, password, IsUsingPasswordHash)
+				self._trakt_post('movie/unseen', {'movies': unseen}, self.options.trakt_username, password, True if self.options.trakt_password_hash else False)
 		except:
 			LOG.info('Error submitting unseen movies to trakt')
 
@@ -470,7 +465,7 @@ class Syncer(object):
 				LOG.info(pformat(allepisodes))
 			else:
 				try:
-					self._trakt_post('show/episode/library', allepisodes, self.options.trakt_username, password, IsUsingPasswordHash)
+					self._trakt_post('show/episode/library', allepisodes, self.options.trakt_username, password, True if self.options.trakt_password_hash else False)
 				except:
 					LOG.info('Error submitting all episodes to trakt library')
 
@@ -478,7 +473,7 @@ class Syncer(object):
 				LOG.info(pformat(unseenepisodes))
 			else:
 				try:
-					self._trakt_post('show/episode/unseen', unseenepisodes, self.options.trakt_username, password, IsUsingPasswordHash)
+					self._trakt_post('show/episode/unseen', unseenepisodes, self.options.trakt_username, password, True if self.options.trakt_password_hash else False)
 				except:
 					LOG.info('Error submitting unseen episodes to trakt library')
 
@@ -486,7 +481,7 @@ class Syncer(object):
 				LOG.info(pformat(seenepisodes))
 			else:
 				try:
-					self._trakt_post('show/episode/seen', seenepisodes, self.options.trakt_username, password, IsUsingPasswordHash)
+					self._trakt_post('show/episode/seen', seenepisodes, self.options.trakt_username, password, True if self.options.trakt_password_hash else False)
 				except:
 					LOG.info('Error submitting seen episodes to trakt library')
 		
@@ -526,16 +521,14 @@ class Syncer(object):
 
 		return doc.getElementsByTagName(nodename)
 
-	def _trakt_post(self, path, data, username, password, passwordishashed = False):
+	def _trakt_post(self, path, data, username, password, usePasswordHash = False):
 		"""Posts informations to trakt. Data should be a dict which will
 		be updated with user credentials.
 		"""
 		url = 'http://api.trakt.tv/%s/%s' % (path, self.options.trakt_key)
 		
-		if not passwordishashed:
+		if not usePasswordHash:
 			password = hashlib.sha1(password).hexdigest()
-		else:
-			LOG.info('Using password hash instead of password (%s' % password)
 
 		postdata = {'username': username,
 					'password': password}
