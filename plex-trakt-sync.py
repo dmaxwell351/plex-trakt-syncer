@@ -534,6 +534,8 @@ class Syncer(object):
 		
 		if not passwordishashed:
 			password = hashlib.sha1(password).hexdigest()
+		else:
+			LOG.info('Using password hash instead of password (%s' % password)
 
 		postdata = {'username': username,
 					'password': password}
