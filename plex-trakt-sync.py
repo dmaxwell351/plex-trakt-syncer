@@ -378,7 +378,7 @@ class Syncer(object):
 	def trakt_report_movies(self, nodes):
 		password = ''
 
-		if IsUsingPasswordHash:
+		if self.options.trakt_password_hash
 			password = self.options.trakt_password_hash
 		else:
 			password = self.options.trakt_password
@@ -433,7 +433,7 @@ class Syncer(object):
 	def trakt_report_episodes(self, episode_data):
 		password = ''
 
-		if IsUsingPasswordHash:
+		if self.options.trakt_password_hash:
 			password = self.options.trakt_password_hash
 		else:
 			password = self.options.trakt_password
