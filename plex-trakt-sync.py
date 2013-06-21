@@ -41,6 +41,10 @@ class Syncer(object):
 
 		self.parse_arguments(args)
 
+		if self.options.testTrakt:
+			self.test_trakt_secure_connection()
+			sys.exit(1)
+
 		if self.options.passwordtohash:
 			self.export_trakt_password_hash(self.options.passwordtohash)
 			sys.exit(1)
@@ -138,6 +142,10 @@ class Syncer(object):
 		                metavar='PASSWORD',
 		                help='Export trakt password as a hash')
 
+		parser.add_option(
+		                '-t', '--test', dest='testTrakt',
+		                help='Test trakt connection')
+
 		self.options, self.arguments = parser.parse_args(args)
 
 		if self.options.verbose:
@@ -154,6 +162,43 @@ class Syncer(object):
 			if not self.options.compareuser and not self.options.compare:
 				if not self.options.trakt_password and not self.options.trakt_password_hash:
 					self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
+	
+	def test_trakt_secure_connection(self):
+		url = 'http://api.trakt.tv/movie/library/%s' % self.options.trakt_key
+		postdata = {'username': username, 'password': password}
+		
+		movies = []
+		movie1 = {"imdb_id":"tt1111422", "title":"The Taking of Pelham 1 2 3", "year":"2009"}
+		movies.append(movie1)
+		
+		data = {'movies': movies}
+
+		postdata.update(data)
+	
+		LOG.info(pformat(data))
+		try:
+			request = urllib2.Request(url, json.dumps(postdata))
+			response = urllib2.urlopen(request)
+		except urllib2.URLError, e:
+			LOG.error(e)
+			raise
+	
+		resp_data = response.read()
+		resp_json = json.loads(resp_data)
+		if resp_json.get('status') == 'success':
+	
+			if LOG.isEnabledFor(logging.DEBUG):
+				LOG.debug('Trakt request success: %s' % pformat(resp_json))
+	
+			else:
+				filtered_data = dict([(key, value) for (key, value) in resp_json.items()
+					                                  if not key.endswith('_movies')])
+				LOG.info('Trakt request success: %s' % pformat(filtered_data))
+	
+			return True
+	
+		else:
+			self.quit_with_error('Trakt request failed with %s' % resp_data)
 
 	def compare_library_with_another(self):
 		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.trakt_username)
