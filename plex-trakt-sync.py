@@ -146,14 +146,15 @@ class Syncer(object):
 			LOG.setLevel(logging.DEBUG)
 
 		# validate options
-		if not self.options.trakt_username:
-			self.quit_with_error('Please define a trakt username (-u).')
+		if not self.options.passwordtohash and not self.options.filename:
+			if not self.options.trakt_username:
+				self.quit_with_error('Please define a trakt username (-u).')
 
-		if not self.options.trakt_key:
-			self.quit_with_error('Please define a trakt API key (-k).')
+			if not self.options.trakt_key:
+				self.quit_with_error('Please define a trakt API key (-k).')
 
-		if not self.options.trakt_password and not self.options.trakt_password_hash:
-			self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
+			if not self.options.trakt_password and not self.options.trakt_password_hash:
+				self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
 
 		if self.options.trakt_password_hash:
 			IsUsingPasswordHash = True
