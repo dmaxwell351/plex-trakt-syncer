@@ -177,14 +177,12 @@ class Syncer(object):
 	
 		LOG.info(pformat(data))
 		try:
-			request = urllib2.Request(url, json.dumps(postdata))
-			response = urllib2.urlopen(request)
+			r = requests.post(url, data=json.dumps(postdata))
 		except urllib2.URLError, e:
 			LOG.error(e)
 			raise
 	
-		resp_data = response.read()
-		resp_json = json.loads(resp_data)
+		resp_json = r.json()
 		if resp_json.get('status') == 'success':
 	
 			if LOG.isEnabledFor(logging.DEBUG):
@@ -198,7 +196,7 @@ class Syncer(object):
 			return True
 	
 		else:
-			self.quit_with_error('Trakt request failed with %s' % resp_data)
+			self.quit_with_error('Trakt request failed with %s' % resp_json)
 
 	def compare_library_with_another(self):
 		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.trakt_username)
@@ -582,17 +580,13 @@ class Syncer(object):
 		LOG.debug('POST to %s ...' % url)
 		LOG.debug(pformat(data))
 		try:
-			request = urllib2.Request(url, json.dumps(postdata))
-			response = urllib2.urlopen(request)
-
+			r = requests.post(url, data=json.dumps(postdata))
 		except urllib2.URLError, e:
 			LOG.error(e)
 			raise
 
-		resp_data = response.read()
-		resp_json = json.loads(resp_data)
+		resp_json = r.json()
 		if resp_json.get('status') == 'success':
-
 			if LOG.isEnabledFor(logging.DEBUG):
 				LOG.debug('Trakt request success: %s' % pformat(resp_json))
 
@@ -604,7 +598,7 @@ class Syncer(object):
 			return True
 
 		else:
-			self.quit_with_error('Trakt request failed with %s' % resp_data)
+			self.quit_with_error('Trakt request failed with %s' % resp_json)
 
 	def _trakt_get(self, path, username = ''):
 		"""Gets information from trakt.
