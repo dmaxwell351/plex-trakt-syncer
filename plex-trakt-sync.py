@@ -531,7 +531,7 @@ class Syncer(object):
 		"""
 		url = 'http://api.trakt.tv/%s/%s' % (path, self.options.trakt_key)
 		
-		if passwordishashed == True:
+		if not passwordishashed:
 			password = hashlib.sha1(password).hexdigest()
 
 		postdata = {'username': username,
