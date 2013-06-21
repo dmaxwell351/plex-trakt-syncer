@@ -152,9 +152,10 @@ class Syncer(object):
 
 			if not self.options.trakt_key:
 				self.quit_with_error('Please define a trakt API key (-k).')
-
-			if not self.options.trakt_password and not self.options.trakt_password_hash:
-				self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
+		
+			if not self.options.compareuser and not self.options.compare:
+				if not self.options.trakt_password and not self.options.trakt_password_hash:
+					self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
 
 		if self.options.trakt_password_hash:
 			IsUsingPasswordHash = True
