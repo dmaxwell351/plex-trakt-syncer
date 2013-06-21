@@ -33,6 +33,8 @@ LOG = logging.getLogger('plex-trakt-syncer')
 LOG.addHandler(logging.StreamHandler())
 LOG.setLevel(logging.INFO)
 
+IsUsingPasswordHash = False
+
 class Syncer(object):
 
 	def __call__(self, args=None):
@@ -40,6 +42,10 @@ class Syncer(object):
 			args = sys.argv[1:]
 
 		self.parse_arguments(args)
+
+		if self.options.passwordtohash:
+			self.export_trakt_password_hash(self.options.passwordtohash)
+			sys.exit(1)
 
 		if self.options.filename:
 			self.export_plex_imdbids(self.options.filename, '_')
@@ -55,6 +61,7 @@ class Syncer(object):
 			
 		if not self.options.episodesonly:
 			self.sync_movies()
+
 		if not self.options.moviesonly:
 			self.sync_shows()
 
@@ -87,7 +94,12 @@ class Syncer(object):
 				'-p', '--password', dest='trakt_password',
 				metavar='PASSWORD',
 				help='trakt.tv password')
-
+		
+		parser.add_option(
+		                '-s', '--secure-password', dest='trakt_password_hash',
+		                metavar='PASSWORDHASH',
+		                help='hash of trakt.tv password')
+		
 		parser.add_option(
 				'-k', '--key', dest='trakt_key',
 				metavar='API-KEY',
@@ -122,7 +134,11 @@ class Syncer(object):
 				'-f', '--file-export', dest='filename', 
 				metavar='FILENAME',
 				help='Export Plex IMDB IDs to a file')
-
+		
+		parser.add_option(
+		                '-o', '--output-hash', dest='passwordtohash',
+		                metavar='PASSWORD',
+		                help='Export trakt password as a hash')
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -136,8 +152,11 @@ class Syncer(object):
 		if not self.options.trakt_key:
 			self.quit_with_error('Please define a trakt API key (-k).')
 
-		if not self.options.trakt_password:
-			self.quit_with_error('Please define a trakt password (-p).')
+		if not self.options.trakt_password and not self.options.trakt_password_hash:
+			self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
+
+		if self.options.trakt_password_hash:
+			IsUsingPasswordHash = True
 
 	def compare_library_with_another(self):
 		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.trakt_username)
@@ -264,6 +283,13 @@ class Syncer(object):
 		f.close()
 		f2.close()
 
+	def export_trakt_password_hash(self, password):
+		LOG.info('Exporting password to file traktpasswd.hash...')
+
+		f = open('traktpasswd.hash', 'w')
+		f.write('%s' % hashlib.sha1(password).hexdigest())
+		f.close()
+
 	def sync_movies(self):
 		LOG.info('Downloading movie metadata from Plex...')
 		
@@ -353,6 +379,13 @@ class Syncer(object):
 				'year': show.getAttribute('year')}
 
 	def trakt_report_movies(self, nodes):
+		password = ''
+
+		if IsUsingPasswordHash:
+			password = self.options.trakt_password_hash
+		else:
+			password = self.options.trakt_password
+
 		movies = []
 		seen = []
 		unseen = []
@@ -378,7 +411,7 @@ class Syncer(object):
 			if self.options.debug:
 				LOG.info(pformat({'movies': movies}))
 			else:
-				self._trakt_post('movie/library', {'movies': movies})
+				self._trakt_post('movie/library', {'movies': movies}, self.options.trakt_username, password, IsUsingPasswordHash)
 		except:
 			LOG.info('Error submitting all movies to trakt library')
 		
@@ -387,7 +420,7 @@ class Syncer(object):
 			if self.options.debug:
 				LOG.info(pformat({'movies': seen}))
 			else:			
-				self._trakt_post('movie/seen', {'movies': seen})
+				self._trakt_post('movie/seen', {'movies': seen}, self.options.trakt_username, password, IsUsingPasswordHash)
 		except:
 			LOG.info('Error submitting seen movies to trakt')
 		
@@ -396,11 +429,18 @@ class Syncer(object):
 			if self.options.debug:
 				LOG.info(pformat({'movies': unseen}))
 			else:			
-				self._trakt_post('movie/unseen', {'movies': unseen})
+				self._trakt_post('movie/unseen', {'movies': unseen}, self.options.trakt_username, password, IsUsingPasswordHash)
 		except:
 			LOG.info('Error submitting unseen movies to trakt')
 
 	def trakt_report_episodes(self, episode_data):
+		password = ''
+
+		if IsUsingPasswordHash:
+			password = self.options.trakt_password_hash
+		else:
+			password = self.options.trakt_password
+
 		LOG.info('Building submission to trakt:')
 		
 		for show, episodes in episode_data:
@@ -428,7 +468,7 @@ class Syncer(object):
 				LOG.info(pformat(allepisodes))
 			else:
 				try:
-					self._trakt_post('show/episode/library', allepisodes)
+					self._trakt_post('show/episode/library', allepisodes, self.options.trakt_username, password, IsUsingPasswordHash)
 				except:
 					LOG.info('Error submitting all episodes to trakt library')
 
@@ -436,7 +476,7 @@ class Syncer(object):
 				LOG.info(pformat(unseenepisodes))
 			else:
 				try:
-					self._trakt_post('show/episode/unseen', unseenepisodes)
+					self._trakt_post('show/episode/unseen', unseenepisodes, self.options.trakt_username, password, IsUsingPasswordHash)
 				except:
 					LOG.info('Error submitting unseen episodes to trakt library')
 
@@ -444,7 +484,7 @@ class Syncer(object):
 				LOG.info(pformat(seenepisodes))
 			else:
 				try:
-					self._trakt_post('show/episode/seen', seenepisodes)
+					self._trakt_post('show/episode/seen', seenepisodes, self.options.trakt_username, password, IsUsingPasswordHash)
 				except:
 					LOG.info('Error submitting seen episodes to trakt library')
 		
@@ -484,21 +524,22 @@ class Syncer(object):
 
 		return doc.getElementsByTagName(nodename)
 
-	def _trakt_post(self, path, data):
+	def _trakt_post(self, path, data, username, password, passwordishashed = False):
 		"""Posts informations to trakt. Data should be a dict which will
 		be updated with user credentials.
 		"""
 		url = 'http://api.trakt.tv/%s/%s' % (path, self.options.trakt_key)
-		passwd = hashlib.sha1(self.options.trakt_password).hexdigest()
+		
+		if passwordishashed == True:
+			password = hashlib.sha1(password).hexdigest()
 
-		postdata = {'username': self.options.trakt_username,
-					'password': passwd}
+		postdata = {'username': username,
+					'password': password}
 		postdata.update(data)
 
 		LOG.debug('POST to %s ...' % url)
 		LOG.debug(pformat(data))
 		try:
-			# data = urllib.urlencode(postdata)
 			request = urllib2.Request(url, json.dumps(postdata))
 			response = urllib2.urlopen(request)
 
