@@ -328,10 +328,10 @@ class Syncer(object):
 			moviesMissingFromTrakt = plexSet.difference(traktSet)
 			
 			LOG.info('Movies missing from Plex...')
-			pprint.pformat(moviesMissingFromPlex)
+			print moviesMissingFromPlex
 			
 			LOG.info('Movies missing from trakt...')
-			pprint.pformat(moviesMissingFromTrakt)
+			print moviesMissingFromTrakt
 		else:
 			LOG.info('No movies found.')
 
@@ -729,9 +729,10 @@ class Syncer(object):
 			
 			c.execute('SELECT imdbid FROM Plex_IMDB_IDs WHERE key = \'' + key + '\'')
 			
-			data = c.fetchone()
+			row = c.fetchone()
 			
-			imdbid = data			
+			if row:
+				imdbid = row[0]
 		except sqlite3.Error, e:
 			LOG.error('Error retrieving cached IMDB: %s' % e.args[0])
 		finally:
