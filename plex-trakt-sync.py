@@ -372,7 +372,7 @@ class Syncer(object):
 				return '0000000'
 			
 		if imdb_id != '0000000':
-			LOG.info('Caching %s: %s' %(path, str(imdb_id)))
+			LOG.debug('Caching %s: %s' %(path, str(imdb_id)))
 			self._cacheIMDBID(path, str(imdb_id))
 
 		return str(imdb_id)
@@ -677,7 +677,7 @@ class Syncer(object):
 			
 			c.execute('INSERT INTO Plex_IMDB_IDs VALUES (\'' + key + '\', \'' + imdbid + '\')')
 		except sqlite3.Error, e:
-			LOG.error('Error caching IMDB: %s' % e.args[0])
+			LOG.info('Error caching IMDB: %s' % e.args[0])
 		finally:
 			if con:
 				con.close()
