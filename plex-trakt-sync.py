@@ -307,27 +307,34 @@ class Syncer(object):
 		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
 		
 		if trakt_movie_nodes != None and plex_movie_nodes != None:
-			plexSet = []
-			traktSet = []
+			plexList = []
+			traktList = []
+			
+			plexSet = None
+			traktSet = None
 	
-			moviesMissingFromPlex = []
-			moviesMissingFromTrakt = []
+			moviesMissingFromPlex = None
+			moviesMissingFromTrakt = None
 			
 			LOG.info('     Building the two sets of IMDB ID\'s...')
 			
 			for plexMovieNode in plex_movie_nodes:
-				plexSet.append(self.plex_get_imdb_id(plexMovieNode.getAttribute('key')))
+				plexList.append(self.plex_get_imdb_id(plexMovieNode.getAttribute('key')))
 			
 			for traktMovieNode in trakt_movie_nodes:
-				traktSet.append(traktMovieNode['imdb_id'])
+				traktList.append(traktMovieNode['imdb_id'])
 			
 			LOG.info('     Discovering the differences...')
+			
+			plexSet = set(plexList)
+			traktSet = set(traktList)
 			
 			moviesMissingFromPlex = traktSet.difference(plexSet)
 			moviesMissingFromTrakt = plexSet.difference(traktSet)
 			
 			LOG.info('Movies missing from Plex...')
 			pprint.pformat(moviesMissingFromPlex)
+			
 			LOG.info('Movies missing from trakt...')
 			pprint.pformat(moviesMissingFromTrakt)
 		else:
