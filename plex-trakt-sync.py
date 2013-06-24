@@ -61,7 +61,7 @@ class Syncer(object):
 			sys.exit(1)
 
 		if self.options.compare:
-			self.find_missing_from_trakt()
+			self.find_missing_from_trakt_2()
 			sys.exit(1)
 			
 		if not self.options.episodesonly:
@@ -297,6 +297,39 @@ class Syncer(object):
 				else:
 					found = False
 					continue
+		else:
+			LOG.info('No movies found.')
+	
+	def find_missing_from_trakt_2(self):
+		LOG.info('     Downloading Plex metadata...')
+		plex_movie_nodes = tuple(self.plex_get_all_movies())
+		LOG.info('     Downloading Trakt metadata...')
+		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
+		
+		if trakt_movie_nodes != None and plex_movie_nodes != None:
+			plexSet = []
+			traktSet = []
+	
+			moviesMissingFromPlex = []
+			moviesMissingFromTrakt = []
+			
+			LOG.info('     Building the two sets of IMDB ID\'s...')
+			
+			for plexMovieNode in plex_movie_nodes:
+				plexSet.append(self.plex_get_imdb_id(plexMovieNode.getAttribute('key')))
+			
+			for traktMovieNode in trakt_movie_nodes:
+				traktSet.append(traktMovieNode['imdb_id'])
+			
+			LOG.info('     Discovering the differences...')
+			
+			moviesMissingFromPlex = traktSet.difference(plexSet)
+			moviesMissingFromTrakt = plexSet.difference(traktSet)
+			
+			LOG.info('Movies missing from Plex...')
+			pprint.pformat(moviesMissingFromPlex)
+			LOG.info('Movies missing from trakt...')
+			pprint.pformat(moviesMissingFromTrakt)
 		else:
 			LOG.info('No movies found.')
 
