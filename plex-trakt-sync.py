@@ -15,6 +15,7 @@ import requests
 import pprint
 import string
 import re
+import sqlite3
 
 VERSION = '1.0'
 
@@ -40,6 +41,8 @@ class Syncer(object):
 			args = sys.argv[1:]
 
 		self.parse_arguments(args)
+		
+		self._prepareCacheDB()
 
 		if self.options.testTrakt:
 			self.test_trakt_secure_connection()
@@ -347,6 +350,13 @@ class Syncer(object):
  					yield node
 
 	def plex_get_imdb_id(self, path):
+		imdb_id = None
+		
+		imdb_id = self._getcachedIMDBID(path)
+		
+		if not imdb_id == None:
+			return imdb_id
+
 		metadata = []
 		guid = ''
 		imdb_id = '0000000'
@@ -361,6 +371,9 @@ class Syncer(object):
 			except:
 				return '0000000'
 			
+		if imdb_id != '0000000':
+			self._cacheIMDBID(path, imdb_id)
+
 		return str(imdb_id)
 
 	def sync_shows(self):
@@ -638,6 +651,56 @@ class Syncer(object):
 					change = change + 1
 				current[j] = min(add, delete, change)
 		return current[n]
+
+	def _prepareCacheDB(self):
+		con = None
+		
+		try:
+			con = sqlite3.connect('cache.db')
+			c = con.cursor()
+			
+			sql = 'create table if not exists ' + Plex_IMDB_IDs + ' (text key, text imdbid)'
+			c.execute(sql)
+		except sqlite3.Error, e:
+			LOG.info('Error creating database: %s' % e.args[0])
+		finally:
+			if con:
+				con.close()	
+
+	def _cacheIMDBID(self, key, imdbid):
+		con = None
+		
+		try:
+			con = sqlite3.connect('cache.db')
+			c = con.cursor()
+			
+			c.execute('INSERT INTO Plex_IMDB_IDs VALUES (' + key + ', ' + imdbid + ')')
+		except sqlite3.Error, e:
+			LOG.info('Error caching IMDB: %s' % e.args[0])
+		finally:
+			if con:
+				con.close()
+
+	def _getcachedIMDBID(self, key):
+		imdbid = None
+		con = None
+		
+		try:
+			con = sqlite3.connect('cache.db')
+			c = con.cursor()
+			
+			c.execute('SELECT imdbid FROM Plex_IMDB_IDs WHERE key = ' + key)
+			
+			data = c.fetchone()
+			
+			imdbid = data			
+		except sqlite3.Error, e:
+			LOG.info('Error retrieving cached IMDB: %s' % e.args[0])
+		finally:
+			if con:
+				con.close()
+		
+		return imdbid
 
 if __name__ == '__main__':
 	try:
