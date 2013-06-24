@@ -4,6 +4,8 @@
 from optparse import OptionParser
 from pprint import pformat
 from xml.dom.minidom import parseString
+from uuid import getnode as get_mac
+from xml.dom import minidom
 import hashlib
 import json
 import logging
@@ -16,7 +18,6 @@ import pprint
 import string
 import re
 import sqlite3
-from uuid import getnode as get_mac
 
 VERSION = '1.0'
 
@@ -46,7 +47,7 @@ class Syncer(object):
 		self._prepareCacheDB()
 
 		if self.options.getPlexXToken:
-			self._get_plex_xtoken(self.options.trakt_username, self.options.trakt_password)
+			print self._get_plex_xtoken(self.options.trakt_username, self.options.trakt_password)
 			sys.exit(1)
 		
 		if self.options.testTrakt:
@@ -146,17 +147,22 @@ class Syncer(object):
 				help='Export Plex IMDB IDs to a file')
 		
 		parser.add_option(
-		                '-o', '--output-hash', dest='passwordtohash',
-		                metavar='PASSWORD',
-		                help='Export trakt password as a hash')
+				'-o', '--output-hash', dest='passwordtohash',
+				metavar='PASSWORD',
+				help='Export trakt password as a hash')
 
 		parser.add_option(
-		                '-t', '--test', dest='testTrakt', action='store_true',
-		                help='Test trakt connection')
+				'-t', '--test', dest='testTrakt', action='store_true',
+				help='Test trakt connection')
 		
 		parser.add_option(
-		                '-l', '--plex-token', dest='getPlexXToken', action='store_true',
-		                help='Get and Export Plex Token')
+				'-l', '--plex-token', dest='getPlexXToken', action='store_true',
+				help='Get and Export Plex Token')
+		
+		parser.add_option(
+				'-a', '--plex-authentication', dest='plexXtoken',
+				metavar='X-TOKEN',
+				help='Plex authentication token')
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -173,7 +179,12 @@ class Syncer(object):
 		
 			if not self.options.compareuser and not self.options.compare:
 				if not self.options.trakt_password and not self.options.trakt_password_hash:
-					self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
+					self.quit_with_error('Please define a trakt password (-p) or secure 
+					password (-s).')
+					
+		if self.options.plex_host:
+			if not self.options.plexXtoken:
+				self.quit_with_error('Please define a Plex authentication token (-a).')
 	
 	def test_trakt_secure_connection(self):
 		url = 'http://api.trakt.tv/movie/library/%s' % self.options.trakt_key
@@ -588,6 +599,8 @@ class Syncer(object):
 		
 
 	def _get_plex_section_paths(self, type_):
+		#https://my.plexapp.com/pms/system/library/sections?auth_token=[token]
+		#[key] ----> http://98.180.85.64:32400/library/sections/1?auth_token=[token]
 		"""Returns all paths to sections of a particular type.
 		_get_plex_section_paths('movie') => ['/library/sections/1/']
 		"""
@@ -756,15 +769,31 @@ class Syncer(object):
 		mac = get_mac()
 		uid = hashlib.sha1(str(mac)).hexdigest()
 		
-		postdata = {'X-Plex-Client-Identifier':uid}
+		LOG.debug('UID: %s' %uid)
+		
+		plexheaders = {'X-Plex-Platform':'MacOSX',
+					'X-Plex-Platform-Version':'10.8.4',
+					'X-Plex-Provides':'server',
+					'X-Plex-Product':'plex-trakt-sync.py',
+					'X-Plex-Version':'1.0.0',
+					'X-Plex-Device':'python',
+					'X-Plex-Client-Identifier':uid}
 		
 		try:
-			r = requests.post(url, data=json.dumps(postdata), auth=(username, password))
+			r = requests.post(url, headers=plexheaders, auth=(username, password))
 		except urllib2.URLError, e:
 			LOG.error(e)
 			raise
 
-		print r.text
+		try:		
+			xmldoc = minidom.parseString(r.text)
+			tokens = xmldoc.getElementsByTagName('authentication-token')
+			token  = tokens[0]
+		
+			return token.childNodes[0].data
+		except e:
+			LOG.error(e)
+			return None
 
 if __name__ == '__main__':
 	try:
