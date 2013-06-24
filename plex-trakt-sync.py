@@ -675,7 +675,7 @@ class Syncer(object):
 			con = sqlite3.connect('cache.db')
 			c = con.cursor()
 			
-			c.execute('INSERT INTO Plex_IMDB_IDs VALUES (?, ?)', key, imdbid)
+			c.execute('INSERT INTO Plex_IMDB_IDs VALUES (?, ?)', [(key, imdbid)])
 		except sqlite3.Error, e:
 			LOG.info('Error caching IMDB: %s' % e.args[0])
 		finally:
