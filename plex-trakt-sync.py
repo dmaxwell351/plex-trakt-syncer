@@ -372,7 +372,8 @@ class Syncer(object):
 				return '0000000'
 			
 		if imdb_id != '0000000':
-			self._cacheIMDBID(path, imdb_id)
+			LOG.info('Caching %s: %s' %(path, str(imdb_id)))
+			self._cacheIMDBID(path, str(imdb_id))
 
 		return str(imdb_id)
 
@@ -662,7 +663,7 @@ class Syncer(object):
 			sql = 'create table if not exists Plex_IMDB_IDs (key TEXT NOT NULL, imdbid TEXT NOT NULL, PRIMARY KEY (key))'
 			c.execute(sql)
 		except sqlite3.Error, e:
-			LOG.info('Error creating database: %s' % e.args[0])
+			LOG.error('Error creating database: %s' % e.args[0])
 		finally:
 			if con:
 				con.close()	
@@ -676,7 +677,7 @@ class Syncer(object):
 			
 			c.execute('INSERT INTO Plex_IMDB_IDs VALUES (\'' + key + '\', \'' + imdbid + '\')')
 		except sqlite3.Error, e:
-			LOG.info('Error caching IMDB: %s' % e.args[0])
+			LOG.error('Error caching IMDB: %s' % e.args[0])
 		finally:
 			if con:
 				con.close()
@@ -695,7 +696,7 @@ class Syncer(object):
 			
 			imdbid = data			
 		except sqlite3.Error, e:
-			LOG.info('Error retrieving cached IMDB: %s' % e.args[0])
+			LOG.error('Error retrieving cached IMDB: %s' % e.args[0])
 		finally:
 			if con:
 				con.close()
