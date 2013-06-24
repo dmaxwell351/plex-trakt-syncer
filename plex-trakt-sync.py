@@ -662,6 +662,7 @@ class Syncer(object):
 			
 			sql = 'create table if not exists Plex_IMDB_IDs (key TEXT NOT NULL, imdbid TEXT NOT NULL, PRIMARY KEY (key))'
 			c.execute(sql)
+			con.commit()
 		except sqlite3.Error, e:
 			LOG.error('Error creating database: %s' % e.args[0])
 		finally:
@@ -676,8 +677,9 @@ class Syncer(object):
 			c = con.cursor()
 			
 			c.execute('INSERT INTO Plex_IMDB_IDs VALUES (?, ?)', (key, imdbid))
+			con.commit()
 		except sqlite3.Error, e:
-			LOG.info('Error caching IMDB: %s' % e.args[0])
+			LOG.error('Error caching IMDB: %s' % e.args[0])
 		finally:
 			if con:
 				con.close()
