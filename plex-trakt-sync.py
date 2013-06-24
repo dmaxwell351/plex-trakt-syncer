@@ -16,6 +16,7 @@ import pprint
 import string
 import re
 import sqlite3
+from uuid import getnode as get_mac
 
 VERSION = '1.0'
 
@@ -44,6 +45,10 @@ class Syncer(object):
 		
 		self._prepareCacheDB()
 
+		if self.options.getPlexXToken:
+			self._get_plex_xtoken(self.options.trakt_username, self.options.trakt_password)
+			sys.exit(1)
+		
 		if self.options.testTrakt:
 			self.test_trakt_secure_connection()
 			sys.exit(1)
@@ -148,6 +153,10 @@ class Syncer(object):
 		parser.add_option(
 		                '-t', '--test', dest='testTrakt', action='store_true',
 		                help='Test trakt connection')
+		
+		parser.add_option(
+		                '-l', '--plex-token', dest='getPlexXToken', action='store_true',
+		                help='Get and Export Plex Token')
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -157,10 +166,10 @@ class Syncer(object):
 		# validate options
 		if not self.options.passwordtohash and not self.options.filename:
 			if not self.options.trakt_username:
-				self.quit_with_error('Please define a trakt username (-u).')
+				self.quit_with_error('Please define a username (-u).')
 
-			if not self.options.trakt_key:
-				self.quit_with_error('Please define a trakt API key (-k).')
+			if not self.options.trakt_key and not self.options.getPlexXToken:
+				self.quit_with_error('Please define an API key (-k).')
 		
 			if not self.options.compareuser and not self.options.compare:
 				if not self.options.trakt_password and not self.options.trakt_password_hash:
@@ -740,6 +749,22 @@ class Syncer(object):
 				con.close()
 		
 		return imdbid
+
+	def _get_plex_xtoken(self, username, password):
+		url = 'https://my.plexapp.com/users/sign_in.xml'
+		
+		mac = get_mac()
+		uid = hashlib.sha1(str(mac)).hexdigest()
+		
+		postdata = {'X-Plex-Client-Identifier':uid}
+		
+		try:
+			r = requests.post(url, data=json.dumps(postdata), auth=(username, password))
+		except urllib2.URLError, e:
+			LOG.error(e)
+			raise
+
+		print r.text
 
 if __name__ == '__main__':
 	try:
