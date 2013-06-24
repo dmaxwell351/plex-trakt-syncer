@@ -659,7 +659,7 @@ class Syncer(object):
 			con = sqlite3.connect('cache.db')
 			c = con.cursor()
 			
-			sql = 'create table if not exists Plex_IMDB_IDs (text key, text imdbid)'
+			sql = 'create table if not exists Plex_IMDB_IDs (key TEXT NOT NULL, imdbid TEXT NOT NULL, PRIMARY KEY (key))'
 			c.execute(sql)
 		except sqlite3.Error, e:
 			LOG.info('Error creating database: %s' % e.args[0])
