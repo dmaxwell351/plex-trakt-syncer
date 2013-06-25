@@ -49,10 +49,6 @@ class Syncer(object):
 		if self.options.getPlexXToken:
 			print self._get_plex_xtoken(self.options.trakt_username, self.options.trakt_password)
 			sys.exit(1)
-		
-		if self.options.testTrakt:
-			self.test_trakt_secure_connection()
-			sys.exit(1)
 
 		if self.options.passwordtohash:
 			self.export_trakt_password_hash(self.options.passwordtohash)
@@ -117,7 +113,7 @@ class Syncer(object):
 				help='trakt.tv API key')
 		
 		parser.add_option(
-		                '-a', '--tmdb-key', dest='tmdb_key',
+		                '-t', '--tmdb-key', dest='tmdb_key',
 		                metavar='API-KEY',
 		                help='The Movie Database (TMDB) API Key')		
 
@@ -155,10 +151,6 @@ class Syncer(object):
 				'-o', '--output-hash', dest='passwordtohash',
 				metavar='PASSWORD',
 				help='Export trakt password as a hash')
-
-		parser.add_option(
-				'-t', '--test', dest='testTrakt', action='store_true',
-				help='Test trakt connection')
 		
 		parser.add_option(
 				'-l', '--plex-token', dest='getPlexXToken', action='store_true',
