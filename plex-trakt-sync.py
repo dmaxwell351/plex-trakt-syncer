@@ -115,6 +115,11 @@ class Syncer(object):
 				'-k', '--key', dest='trakt_key',
 				metavar='API-KEY',
 				help='trakt.tv API key')
+		
+		parser.add_option(
+		                '-a', '--tmdb-key', dest='tmdb_key',
+		                metavar='API-KEY',
+		                help='The Movie Database (TMDB) API Key')		
 
 		parser.add_option(
 				'-v', '--verbose', dest='verbose', action='store_true',
@@ -175,15 +180,18 @@ class Syncer(object):
 				self.quit_with_error('Please define a username (-u).')
 
 			if not self.options.trakt_key and not self.options.getPlexXToken:
-				self.quit_with_error('Please define an API key (-k).')
+				self.quit_with_error('Please define a trakt API key (-k).')
+			
+			if not self.options.tmdb_key:
+				self.quit_with_error('Please define a TMDB API key (-a).')
 		
 			if not self.options.compareuser and not self.options.compare:
 				if not self.options.trakt_password and not self.options.trakt_password_hash:
 					self.quit_with_error('Please define a trakt password (-p) or secure password (-s).')
 					
-		if self.options.plex_host:
-			if not self.options.plexXtoken:
-				self.quit_with_error('Please define a Plex authentication token (-a).')
+#		if self.options.plex_host:
+#			if not self.options.plexXtoken:
+#				self.quit_with_error('Please define a Plex authentication token (-a).')
 	
 	def test_trakt_secure_connection(self):
 		url = 'http://api.trakt.tv/movie/library/%s' % self.options.trakt_key
@@ -414,6 +422,9 @@ class Syncer(object):
 		metadata = []
 		guid = ''
 		imdb_id = '0000000'
+		tmdb_id = '0000000'
+		imdb_id_groups = None
+		tmdb_id_groups = None
 		
 		for node in self._plex_request(path):
 			metadata.append(node)
@@ -421,7 +432,16 @@ class Syncer(object):
 		if len(metadata) > 0:
 			guid = node.getAttribute('guid')
 			try:
-				imdb_id = re.search('imdb://(tt[0-9]{7})', guid).groups(1)[0]
+				imdb_id_groups = re.search('imdb://(tt[0-9]{7})', guid)
+				tmdb_id_groups = re.search('themoviedb://([0-9]+)', guid)
+				
+				if imdb_id_groups:
+					imdb_id = imdb_id_groups.groups(1)[0]
+				elif tmdb_id_groups:
+					tmdb_id = self.get_imdb_id_from_tmdb(tmdb_id_groups.groups(1)[0], self.options.tmdb_key)
+					
+					if tmdb_id:
+						imdb_id = tmdb_id
 			except:
 				return '0000000'
 			
@@ -430,6 +450,23 @@ class Syncer(object):
 			self._cacheIMDBID(path, str(imdb_id))
 
 		return str(imdb_id)
+
+	def get_imdb_id_from_tmdb(self, tmdb_id, tmdb_api_key):
+		url = 'http://api.themoviedb.org/3/movie/%s?api_key=%s' % (tmdb_id, tmdb_api_key)
+		
+		tmdbheaders = {'Accept':'application/json'}
+		
+		try:
+			r = requests.get(url, headers=tmdbheaders)
+		except urllib2.URLError, e:
+			LOG.error(e)
+			raise
+
+		try:
+			return r.json()['imdb_id']
+		except e:
+			LOG.error(e)
+			return None		
 
 	def sync_shows(self):
 		LOG.info('Downloading TV show metadata from Plex...')
