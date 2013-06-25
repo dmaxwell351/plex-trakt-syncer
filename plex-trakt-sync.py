@@ -59,7 +59,11 @@ class Syncer(object):
 			sys.exit(1)
 
 		if self.options.compareuser:
-			self.compare_library_with_another()
+			self.compare_library_with_another(self.options.compareuser)
+			sys.exit(1)
+			
+		if self.options.missinguser:
+			self.compare_library_with_another(self.options.missinguser, True)
 			sys.exit(1)
 
 		if self.options.compare:
@@ -141,6 +145,11 @@ class Syncer(object):
 				'-x', '--compare-user', dest='compareuser',
 				metavar='COMPAREUSER',
 				help='Compare your trakt movie library with another user\'s.')
+		
+		parser.add_option(
+		                '-i', '--missing-user', dest='missinguser',
+		                metavar='COMPAREUSER',
+		                help='Compare your trakt movie library with another user\'s, showing only what you\'re missing.')
 				
 		parser.add_option(
 				'-f', '--file-export', dest='filename', 
@@ -220,12 +229,12 @@ class Syncer(object):
 		else:
 			self.quit_with_error('Trakt request failed with %s' % resp_json)
 
-	def compare_library_with_another(self):
+	def compare_library_with_another(self, otheruser, onlyShowMissing = False):
 		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.trakt_username)
 		own_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
 		
-		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.compareuser)
-		other_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json', self.options.compareuser))
+		LOG.info('     Downloading %s\'s Trakt metadata...' % otheruser)
+		other_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json', otheruser))
 		
 		found_nodes = []
 		found = False;
@@ -233,7 +242,7 @@ class Syncer(object):
 		if own_trakt_movie_nodes != None and other_trakt_movie_nodes != None:
 			LOG.info('Comparing movie metadata between the two users...')
 			LOG.info('')
-			LOG.info('     Comparing %s\'s library to %s\'s...' % (self.options.trakt_username, self.options.compareuser))			
+			LOG.info('     Comparing %s\'s library to %s\'s...' % (self.options.trakt_username, otheruser))			
 			for ownMovieNode in own_trakt_movie_nodes:
 				for otherMovieNode in other_trakt_movie_nodes:
 					if ownMovieNode['imdb_id'] == otherMovieNode['imdb_id'] and otherMovieNode not in found_nodes:						
@@ -244,30 +253,31 @@ class Syncer(object):
 						continue
 
 				if not found:
-					LOG.info("     *****%s (%s) is missing from %s\'s library..." % (ownMovieNode['title'], ownMovieNode['year'], self.options.compareuser))
+					LOG.info("     *****%s (%s) is missing from %s\'s library..." % (ownMovieNode['title'], ownMovieNode['year'], otheruser))
 				else:
 					found = False
 					continue
 			
-			found_nodes = []
-			found = False;
-			
-			LOG.info('')
-			LOG.info('     Comparing %s\'s library to %s\'s...' % (self.options.compareuser, self.options.trakt_username))
-			for otherMovieNode in other_trakt_movie_nodes:
-				for ownMovieNode in own_trakt_movie_nodes:
-					if ownMovieNode['imdb_id'] == otherMovieNode['imdb_id'] and ownMovieNode not in found_nodes:						
-						found_nodes.append(ownMovieNode)
-						found = True
-						break
+			if not onlyShowMissing:
+				found_nodes = []
+				found = False;
+				
+				LOG.info('')
+				LOG.info('     Comparing %s\'s library to %s\'s...' % (otheruser, self.options.trakt_username))
+				for otherMovieNode in other_trakt_movie_nodes:
+					for ownMovieNode in own_trakt_movie_nodes:
+						if ownMovieNode['imdb_id'] == otherMovieNode['imdb_id'] and ownMovieNode not in found_nodes:						
+							found_nodes.append(ownMovieNode)
+							found = True
+							break
+						else:
+							continue
+				
+					if not found:
+						LOG.info("     *****%s (%s) is missing from %s\'s library..." % (otherMovieNode['title'], otherMovieNode['year'], self.options.trakt_username))
 					else:
-						continue
-			
-				if not found:
-					LOG.info("     *****%s (%s) is missing from %s\'s library..." % (otherMovieNode['title'], otherMovieNode['year'], self.options.trakt_username))
-				else:
-					found = False
-					continue			
+						found = False
+						continue			
 		else:
 			LOG.info('No movies found.')		
 
