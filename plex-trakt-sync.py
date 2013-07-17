@@ -231,10 +231,10 @@ class Syncer(object):
 
 	def compare_library_with_another(self, otheruser, onlyShowMissing = False):
 		LOG.info('     Downloading %s\'s Trakt metadata...' % self.options.trakt_username)
-		own_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
+		own_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/collection.json'))
 		
 		LOG.info('     Downloading %s\'s Trakt metadata...' % otheruser)
-		other_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json', otheruser))
+		other_trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/collection.json', otheruser))
 		
 		found_nodes = []
 		found = False;
@@ -285,7 +285,7 @@ class Syncer(object):
 		LOG.info('     Downloading Plex metadata...')
 		plex_movie_nodes = tuple(self.plex_get_all_movies())
 		LOG.info('     Downloading Trakt metadata...')
-		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
+		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/collection.json'))
 		found_nodes = []
 		
 		found = False;
@@ -334,7 +334,7 @@ class Syncer(object):
 		plex_movie_nodes = tuple(self.plex_get_all_movies())
 		
 		LOG.info('     Downloading Trakt metadata...')
-		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/all.json'))
+		trakt_movie_nodes = tuple(self._trakt_get('user/library/movies/collection.json'))
 		
 		if trakt_movie_nodes != None and plex_movie_nodes != None:
 			plexSet = set()
