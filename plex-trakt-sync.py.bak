@@ -578,7 +578,7 @@ class Syncer(object):
 			else:			
 				self._trakt_post('movie/unseen', {'movies': unseen}, self.options.trakt_username, password, True if self.options.trakt_password_hash else False)
 		except:
-			LOG.info('Error submitting unseen movies to trakt: %s' % sys.exc_info()[0])
+			LOG.info('Error submitting unseen movies to trakt')
 
 	def trakt_report_episodes(self, episode_data):
 		password = ''
