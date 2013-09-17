@@ -47,7 +47,7 @@ class Syncer(object):
 		self._prepareCacheDB()
 
 		if self.options.removeDupeDownloads:
-			self.remove_duplicate_downloads()
+			self.remove_duplicate_downloads(self.options.removeDupeDownloads)
 			sys.exit(1)
 
 		if self.options.getPlexXToken:
@@ -176,7 +176,7 @@ class Syncer(object):
 
 		parser.add_option(
 				'-g', '--remove-duplicate-downloads', dest='removeDupeDownloads',
-				action='store_true',
+				metavar='FOLDERPATH',
 				help='Remove duplicate downloads from CouchPotato download directory')
 
 		self.options, self.arguments = parser.parse_args(args)
@@ -185,7 +185,7 @@ class Syncer(object):
 			LOG.setLevel(logging.DEBUG)
 
 		# validate options
-		if not self.options.passwordtohash and not self.options.filename:
+		if not self.options.passwordtohash and not self.options.filename and not self.options.removeDupeDownloads:
 			if not self.options.trakt_username:
 				self.quit_with_error('Please define a username (-u).')
 
@@ -373,7 +373,7 @@ class Syncer(object):
 		else:
 			LOG.info('No movies found.')
 			
-	def remove_duplicate_downloads(self):
+	def remove_duplicate_downloads(self, folderPath):
 		LOG.info('     Downloading Plex metadata...')
 		plex_movie_nodes = tuple(self.plex_get_all_movies())
 		
@@ -387,13 +387,16 @@ class Syncer(object):
 			
 			LOG.info('     Searching the folder for duplicate movies')
 			
-			dirList = os.listdir("E:\Video\Movies")
+			dirList = os.listdir(folderPath)
 			for dir in dirList:
 				if os.path.isdir(dir) == True:
 					matchObj = re.match(r'.*\.cp\((tt\d)\)', os.path.basename(dir), re.M|re.I)
 					
 					if (matchObj):
-						LOG.info("Delete %s" % os.path.basename(dir))
+						if (str(matchObj.group(1)) in plexSet):
+							LOG.info("Delete %s..." % os.path.basename(dir))
+						else:
+							LOG.info("%s is a new movie..." % os.path.basename(dir))
 					else:
 						LOG.info("Could not match on %s" % os.path.basename(dir))
 		else:
