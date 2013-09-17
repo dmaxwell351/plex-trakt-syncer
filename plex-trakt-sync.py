@@ -46,6 +46,10 @@ class Syncer(object):
 		
 		self._prepareCacheDB()
 
+		if self.options.removeDupeDownloads:
+			self.remove_duplicate_downloads()
+			sys.exit(1)
+
 		if self.options.getPlexXToken:
 			print self._get_plex_xtoken(self.options.trakt_username, self.options.trakt_password)
 			sys.exit(1)
@@ -169,6 +173,11 @@ class Syncer(object):
 				'-a', '--plex-authentication', dest='plexXtoken',
 				metavar='X-TOKEN',
 				help='Plex authentication token')
+
+		parser.add_option(
+				'-g', '--remove-duplicate-downloads', dest='removeDupeDownloads',
+				action='store_true',
+				help='Remove duplicate downloads from CouchPotato download directory')
 
 		self.options, self.arguments = parser.parse_args(args)
 
@@ -363,6 +372,32 @@ class Syncer(object):
 			print moviesMissingFromTrakt
 		else:
 			LOG.info('No movies found.')
+			
+	def remove_duplicate_downloads(self):
+		LOG.info('     Downloading Plex metadata...')
+		plex_movie_nodes = tuple(self.plex_get_all_movies())
+		
+		if plex_movie_nodes != None:
+			plexSet = set()
+			
+			LOG.info('     Building the set of IMDB ID\'s...')
+			
+			for plexMovieNode in plex_movie_nodes:
+				plexSet.add(str(self.plex_get_imdb_id(plexMovieNode.getAttribute('key'))))
+			
+			LOG.info('     Searching the folder for duplicate movies')
+			
+			dirList = os.listdir("E:\Video\Movies")
+			for dir in dirList:
+				if os.path.isdir(dir) == True:
+					matchObj = re.match(r'.*\.cp\((tt\d)\)', os.path.basename(dir), re.M|re.I)
+					
+					if (matchObj):
+						LOG.info("Delete %s" % os.path.basename(dir))
+					else:
+						LOG.info("Could not match on %s" % os.path.basename(dir))
+		else:
+			LOG.info('No movies found in Plex.')
 
 	def export_plex_imdbids(self, filename, delimeter = '\n'):
 		LOG.info('Downloading Plex metadata...')
