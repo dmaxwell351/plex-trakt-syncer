@@ -396,7 +396,7 @@ class Syncer(object):
 				if (matchObj):
 					if (str(matchObj.group(1)) in plexSet):
 						LOG.info("          Deleting %s..." % os.path.basename(dir))
-						shutil.rmtree(dir)
+						shutil.rmtree(os.path.join(folderPath, dir))
 #					else:
 #						LOG.info("          %s is a new movie..." % os.path.basename(dir))
 				else:
