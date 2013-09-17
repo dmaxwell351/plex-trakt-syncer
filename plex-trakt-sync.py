@@ -389,24 +389,20 @@ class Syncer(object):
 			
 			dirList = os.listdir(folderPath)
 			
-			LOG.info("Found %s subfolders..." % str(dirList.count))
 			for dir in dirList:
-				if os.path.isdir(dir) == True:
-					LOG.info("Looking for IMDB in %s..." % os.path.basename(dir))
+				LOG.info("Looking for IMDB in %s..." % os.path.basename(dir))
 					
-					matchObj = re.match(r'.*\.cp\((tt\d)\)', os.path.basename(dir), re.M|re.I)
+				matchObj = re.match(r'.*\.cp\((tt\d)\)', os.path.basename(dir), re.M|re.I)
 					
-					if (matchObj):
-						LOG.info("Found a match: %s..." % str(matchObj.group(1)))
+				if (matchObj):
+					LOG.info("Found a match: %s..." % str(matchObj.group(1)))
 						
-						if (str(matchObj.group(1)) in plexSet):
-							LOG.info("Delete %s..." % os.path.basename(dir))
-						else:
-							LOG.info("%s is a new movie..." % os.path.basename(dir))
+					if (str(matchObj.group(1)) in plexSet):
+						LOG.info("Delete %s..." % os.path.basename(dir))
 					else:
-						LOG.info("Could not match on %s" % os.path.basename(dir))
+						LOG.info("%s is a new movie..." % os.path.basename(dir))
 				else:
-					LOG.info("%s is not a folder!" % dir)
+					LOG.info("Could not match on %s" % os.path.basename(dir))
 		else:
 			LOG.info('No movies found in Plex.')
 
