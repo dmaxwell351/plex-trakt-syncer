@@ -18,6 +18,7 @@ import pprint
 import string
 import re
 import sqlite3
+import shutil
 
 VERSION = '1.0'
 
@@ -394,9 +395,10 @@ class Syncer(object):
 					
 				if (matchObj):
 					if (str(matchObj.group(1)) in plexSet):
-						LOG.info("          Delete %s..." % os.path.basename(dir))
-					else:
-						LOG.info("          %s is a new movie..." % os.path.basename(dir))
+						LOG.info("          Deleting %s..." % os.path.basename(dir))
+						shutil.rmtree(dir)
+#					else:
+#						LOG.info("          %s is a new movie..." % os.path.basename(dir))
 				else:
 					LOG.info("          Could not match on %s" % os.path.basename(dir))
 		else:
