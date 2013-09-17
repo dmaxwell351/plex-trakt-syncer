@@ -388,6 +388,8 @@ class Syncer(object):
 			LOG.info('     Searching the folder for duplicate movies')
 			
 			dirList = os.listdir(folderPath)
+			
+			LOG.info("Found %s subfolders..." % str(dirList.count))
 			for dir in dirList:
 				if os.path.isdir(dir) == True:
 					LOG.info("Looking for IMDB in %s..." % os.path.basename(dir))
@@ -404,7 +406,7 @@ class Syncer(object):
 					else:
 						LOG.info("Could not match on %s" % os.path.basename(dir))
 				else:
-					LOG.info("%s is not a folder!" % folderPath)
+					LOG.info("%s is not a folder!" % dir)
 		else:
 			LOG.info('No movies found in Plex.')
 
